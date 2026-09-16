@@ -9,7 +9,7 @@ spring:
   mail:
     host: localhost
     port: 1025
-    username:
+    username: noreply@docusphere.com
     password:
     properties:
       mail:
