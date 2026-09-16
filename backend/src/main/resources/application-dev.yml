@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/docusphere
+    username: docusphere
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  # Configuration SMTP pour Mailpit (Mock)
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.docusphere: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Affiche les paramètres des requêtes SQL

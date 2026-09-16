@@ -1,0 +1,80 @@
+# ==========================================
+# JAVA & MAVEN
+# ==========================================
+# Fichiers compilés (.class, .log)
+*.class
+*.log
+*.lst
+
+# Paquetages et archives
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Répertoire de build Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ==========================================
+# INTELLIJ IDEA
+# ==========================================
+# Dossier de configuration de l'IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Exclusions spécifiques à IntelliJ (ne pas ignorer les dictionnaires partagés)
+!.idea/dictionaries
+!.idea/iconloader.xml
+
+# Fichiers de build générés par IntelliJ
+out/
+gen/
+
+# Fichiers temporaires de crash ou de logs de l'IDE
+*.log
+.attach_pid*
+
+# ==========================================
+# SYSTEMES D'EXPLOITATION (OS)
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.lnk
+*.cab
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.trash/
+.nfs*

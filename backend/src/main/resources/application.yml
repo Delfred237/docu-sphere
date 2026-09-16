@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: DocuSphere
+  profiles:
+    active: dev
+
+  # JPA & Hibernate
+  jpa:
+    hibernate:
+      # En entreprise, on ne laisse JAMAIS Hibernate modifier le schéma.
+      # On utilise Flyway pour les migrations.
+      ddl-auto: validate
+    open-in-view: false # Désactivé pour éviter les problèmes de performance et les transactions cachées
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 20 # Optimisation N+1
+
+  # Migrations
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Upload limits
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB # Écrit sur disque après 2MB pour ne pas saturer la RAM
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never # Sécurité : ne jamais exposer la stack trace au client
+    include-exception: false
+
+logging:
+  level:
+    root: INFO
+    com.docusphere: DEBUG
