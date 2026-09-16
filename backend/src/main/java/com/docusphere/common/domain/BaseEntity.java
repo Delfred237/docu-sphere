@@ -34,11 +34,11 @@ public class BaseEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @CreatedBy
     @Column(name = "created_by", updatable = false, length = 100)
@@ -63,6 +63,8 @@ public class BaseEntity {
     }
 
     // Equals et HashCode basés sur l'ID interne pour les opérations JPA
+    // Recommandation officielle de Vlad Mihalcea (expert Hibernate).
+    // Utiliser getClass().hashCode() évite que le hash change avant/après la persistance de l'ID
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
