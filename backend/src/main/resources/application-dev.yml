@@ -21,6 +21,12 @@ spring:
   jpa:
     show-sql: true
 
+app:
+  security:
+    jwt-secret: "docusphere_super_secret_key_for_dev_only_change_in_prod_1234567890"
+    jwt-expiration-ms: 900000 # 15 minutes
+    refresh-token-expiration-ms: 604800000 # 7 jours
+
 logging:
   level:
     com.docusphere: DEBUG

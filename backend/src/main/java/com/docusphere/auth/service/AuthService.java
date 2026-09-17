@@ -1,21 +1,22 @@
 package com.docusphere.auth.service;
 
-import com.docusphere.auth.domain.EmailVerificationToken;
-import com.docusphere.auth.domain.Role;
-import com.docusphere.auth.domain.RoleName;
-import com.docusphere.auth.domain.User;
-import com.docusphere.auth.dto.RegisterRequest;
-import com.docusphere.auth.dto.RegisterResponse;
+import com.docusphere.auth.domain.*;
+import com.docusphere.auth.dto.*;
 import com.docusphere.auth.event.UserRegisteredEvent;
 import com.docusphere.auth.repository.EmailVerificationTokenRepository;
+import com.docusphere.auth.repository.RefreshTokenRepository;
 import com.docusphere.auth.repository.RoleRepository;
 import com.docusphere.auth.repository.UserRepository;
 import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.DuplicateResourceException;
 import com.docusphere.common.exception.ResourceNotFoundException;
+import com.docusphere.config.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationTokenRepository tokenRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtProperties jwtProperties;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -84,7 +89,64 @@ public class AuthService {
         );
     }
 
-    // Ajoute la méthode de vérification
+    @Transactional
+    public LoginResponse login(LoginRequest request) {
+        try {
+            // Spring Security valide le mot de passe via le PasswordEncoder
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+            );
+        } catch (AuthenticationException e) {
+            throw new BusinessException("Invalid email or password.", HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(request.email())
+                .orElseThrow(() -> new BusinessException("Invalid email or password.", HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS"));
+
+        if (!user.isEmailVerified()) {
+            throw new BusinessException("Email not verified. Please check your inbox.", HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED");
+        }
+
+        if (!user.isActive()) {
+            throw new BusinessException("Account is deactivated.", HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED");
+        }
+
+        String accessToken = jwtService.generateAccessToken(user);
+
+        // Révoquer les anciens refresh tokens pour cet utilisateur (optionnel : pour forcer un seul appareil)
+        // refreshTokenRepository.deleteByUser(user);
+
+        RefreshToken refreshToken = new RefreshToken(user, jwtProperties.getRefreshTokenExpirationMs());
+        refreshTokenRepository.save(refreshToken);
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken.getToken(),
+                "Bearer",
+                jwtProperties.getJwtExpirationMs()
+        );
+    }
+
+    @Transactional
+    public LoginResponse refreshToken(RefreshTokenRequest request) {
+        RefreshToken storedToken = refreshTokenRepository.findByToken(request.refreshToken())
+                .orElseThrow(() -> new BusinessException("Invalid refresh token.", HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN"));
+
+        if (storedToken.isExpired() || storedToken.isRevoked()) {
+            throw new BusinessException("Refresh token expired or revoked. Please login again.", HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_EXPIRED");
+        }
+
+        User user = storedToken.getUser();
+        String newAccessToken = jwtService.generateAccessToken(user);
+
+        return new LoginResponse(
+                newAccessToken,
+                storedToken.getToken(), // On garde le même refresh token (Rotation de token peut être ajoutée plus tard)
+                "Bearer",
+                jwtProperties.getJwtExpirationMs()
+        );
+    }
+
     @Transactional
     public void verifyEmail(String token) {
         EmailVerificationToken verificationToken = tokenRepository.findByCode(token)
@@ -104,15 +166,15 @@ public class AuthService {
         tokenRepository.delete(verificationToken);
     }
 
-
-    // Dans la classe AuthService, ajoute cette méthode privée :
-    private String generateSecureOtpCode() {
-        SecureRandom random = new SecureRandom();
-        int code = random.nextInt(1_000_000); // Génère entre 0 et 999999
-        return String.format("%06d", code);    // Formate pour avoir toujours 6 chiffres (ex: 004210)
+    @Transactional
+    public void logout(RefreshTokenRequest request) {
+        refreshTokenRepository.findByToken(request.refreshToken())
+                .ifPresent(token -> {
+                    token.setRevoked(true);
+                    refreshTokenRepository.save(token);
+                });
     }
 
-    // Modifie la méthode verifyEmail pour prendre l'email et le code :
     @Transactional
     public void verifyEmail(String email, String code) {
         User user = userRepository.findByEmailIgnoreCase(email)
@@ -146,5 +208,13 @@ public class AuthService {
         user.setEmailVerified(true);
         userRepository.save(user);
         tokenRepository.delete(token);
+    }
+
+
+    // Dans la classe AuthService, ajoute cette méthode privée :
+    private String generateSecureOtpCode() {
+        SecureRandom random = new SecureRandom();
+        int code = random.nextInt(1_000_000); // Génère entre 0 et 999999
+        return String.format("%06d", code);    // Formate pour avoir toujours 6 chiffres (ex: 004210)
     }
 }
