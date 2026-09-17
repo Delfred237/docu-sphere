@@ -1,18 +1,22 @@
 package com.docusphere.auth.event;
 
+import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 public class UserRegisteredEvent extends ApplicationEvent {
 
+    @Getter
     private final String email;
-    private final String token;
+    private final String fullName;
+    private final String code;
 
-    public UserRegisteredEvent(Object source, String email, String token) {
+    public UserRegisteredEvent(Object source, String email, String fullName, String code) {
         super(source);
         this.email = email;
-        this.token = token;
+        this.fullName = fullName;
+        this.code = code;
     }
 
-    public String getEmail() { return email; }
-    public String getToken() { return token; }
+    public String getFullName() { return fullName; }
+    public String getCode() { return code; }
 }

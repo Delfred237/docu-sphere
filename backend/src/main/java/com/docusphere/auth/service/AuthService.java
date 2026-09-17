@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -53,16 +55,23 @@ public class AuthService {
         // 4. Sauvegarder
         User savedUser = userRepository.save(user);
 
+        // Si un ancien token existe pour cet utilisateur (cas de réinscription), on le supprime
+        tokenRepository.findByUser(savedUser).ifPresent(tokenRepository::delete);
+
         // Création du token de vérification
-        EmailVerificationToken verificationToken = new EmailVerificationToken(savedUser);
+        String otpCode = generateSecureOtpCode();
+        EmailVerificationToken verificationToken = new EmailVerificationToken(savedUser, otpCode);
         tokenRepository.save(verificationToken);
+
+        String savedUserFullName = savedUser.getFirstName() + " " + savedUser.getLastName();
 
         // Publication de l'événement (découplage)
         eventPublisher.publishEvent(
                 new UserRegisteredEvent(
                         this,
                         savedUser.getEmail(),
-                        verificationToken.getToken()
+                        savedUserFullName,
+                        otpCode
                 )
         );
 
@@ -78,7 +87,7 @@ public class AuthService {
     // Ajoute la méthode de vérification
     @Transactional
     public void verifyEmail(String token) {
-        EmailVerificationToken verificationToken = tokenRepository.findByToken(token)
+        EmailVerificationToken verificationToken = tokenRepository.findByCode(token)
                 .orElseThrow(() -> new BusinessException("Invalid verification token.", HttpStatus.BAD_REQUEST, "INVALID_TOKEN"));
 
         if (verificationToken.isExpired()) {
@@ -93,5 +102,49 @@ public class AuthService {
 
         // Nettoyage du token après utilisation
         tokenRepository.delete(verificationToken);
+    }
+
+
+    // Dans la classe AuthService, ajoute cette méthode privée :
+    private String generateSecureOtpCode() {
+        SecureRandom random = new SecureRandom();
+        int code = random.nextInt(1_000_000); // Génère entre 0 et 999999
+        return String.format("%06d", code);    // Formate pour avoir toujours 6 chiffres (ex: 004210)
+    }
+
+    // Modifie la méthode verifyEmail pour prendre l'email et le code :
+    @Transactional
+    public void verifyEmail(String email, String code) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new BusinessException("Invalid email or code.", HttpStatus.BAD_REQUEST, "INVALID_CREDENTIALS"));
+
+        EmailVerificationToken token = tokenRepository.findByUser(user)
+                .orElseThrow(() -> new BusinessException("Invalid email or code.", HttpStatus.BAD_REQUEST, "INVALID_CREDENTIALS"));
+
+        if (token.isExpired()) {
+            tokenRepository.delete(token);
+            throw new BusinessException("Verification code has expired.", HttpStatus.BAD_REQUEST, "CODE_EXPIRED");
+        }
+
+        if (token.isBlocked()) {
+            tokenRepository.delete(token); // Sécurité : on nettoie si bloqué
+            throw new BusinessException("Too many failed attempts. Please register again.", HttpStatus.BAD_REQUEST, "CODE_BLOCKED");
+        }
+
+        if (!token.getCode().equals(code)) {
+            token.incrementAttempts();
+            tokenRepository.save(token);
+
+            if (token.isBlocked()) {
+                tokenRepository.delete(token);
+                throw new BusinessException("Too many failed attempts. Please register again.", HttpStatus.BAD_REQUEST, "CODE_BLOCKED");
+            }
+            throw new BusinessException("Invalid verification code.", HttpStatus.BAD_REQUEST, "INVALID_CODE");
+        }
+
+        // Succès
+        user.setEmailVerified(true);
+        userRepository.save(user);
+        tokenRepository.delete(token);
     }
 }

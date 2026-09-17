@@ -18,6 +18,6 @@ public class EmailNotificationListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserRegisteredEvent(UserRegisteredEvent event) {
         log.debug("Handling UserRegisteredEvent for {}", event.getEmail());
-        emailService.sendVerificationEmail(event.getEmail(), event.getToken());
+        emailService.sendVerificationCode(event.getEmail(), event.getFullName(), event.getCode());
     }
 }
