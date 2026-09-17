@@ -27,6 +27,13 @@ app:
     jwt-expiration-ms: 900000 # 15 minutes
     refresh-token-expiration-ms: 604800000 # 7 jours
 
+  # Configuration compte admin
+  admin:
+    email: "admin@docusphere.com"
+    password: "Admin123!" # Mot de passe par défaut pour le DEV uniquement
+    first-name: "System"
+    last-name: "Administrator"
+
 logging:
   level:
     com.docusphere: DEBUG

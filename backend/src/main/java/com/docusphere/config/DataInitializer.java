@@ -1,15 +1,14 @@
 package com.docusphere.config;
 
-import com.docusphere.auth.domain.Permission;
-import com.docusphere.auth.domain.PermissionName;
-import com.docusphere.auth.domain.Role;
-import com.docusphere.auth.domain.RoleName;
+import com.docusphere.auth.domain.*;
 import com.docusphere.auth.repository.PermissionRepository;
 import com.docusphere.auth.repository.RoleRepository;
+import com.docusphere.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -23,6 +22,9 @@ public class DataInitializer implements ApplicationRunner {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AdminProperties adminProperties;
 
 
     @Override
@@ -59,6 +61,33 @@ public class DataInitializer implements ApplicationRunner {
                 Arrays.stream(PermissionName.values()).collect(Collectors.toSet()), allPermissions);
 
         log.info("Default permissions and roles initialized.");
+
+        // 3. Create Default Admin User (NOUVEAU)
+        createDefaultAdminUser();
+    }
+
+    private void createDefaultAdminUser() {
+        if (userRepository.existsByEmailIgnoreCase(adminProperties.getEmail())) {
+            log.debug("Default admin user already exists. Skipping creation.");
+            return;
+        }
+
+        log.warn("⚠️ Creating default admin user. This should NOT happen in production without secure credentials!");
+
+        Role adminRole = roleRepository.findByName(RoleName.ADMIN)
+                .orElseThrow(() -> new IllegalStateException("ADMIN role not found during initialization."));
+
+        User admin = new User();
+        admin.setEmail(adminProperties.getEmail().toLowerCase());
+        admin.setPassword(passwordEncoder.encode(adminProperties.getPassword()));
+        admin.setFirstName(adminProperties.getFirstName());
+        admin.setLastName(adminProperties.getLastName());
+        admin.setEmailVerified(true); // Crucial : l'admin doit pouvoir se connecter immédiatement
+        admin.setActive(true);
+        admin.addRole(adminRole);
+
+        userRepository.save(admin);
+        log.info("✅ Default admin user created: {}", adminProperties.getEmail());
     }
 
     private void createRoleIfNotExists(RoleName roleName, Set<PermissionName> permissionNames, Set<Permission> allPermissions) {
