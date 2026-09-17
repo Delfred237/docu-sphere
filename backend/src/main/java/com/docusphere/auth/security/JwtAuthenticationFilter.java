@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -44,11 +46,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Utilisation de la méthode avec JOIN FETCH
-                userRepository.findByEmailIgnoreCaseWithRoles(userEmail).ifPresent(user -> {
+                userRepository.findByEmailIgnoreCaseWithRolesAndPermissions(userEmail).ifPresent(user -> {
                     if (jwtService.isTokenValid(jwt, user) && user.isActive()) {
-                        var authorities = user.getRoles().stream()
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
-                                .toList();
+
+                        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+                        // 1. Ajouter les Rôles (ex: ROLE_ADMIN)
+                        user.getRoles().forEach(role -> {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName().name()));
+
+                            // 2. Ajouter les Permissions de chaque rôle (ex: USER_MANAGE)
+                            role.getPermissions().forEach(permission -> {
+                                authorities.add(new SimpleGrantedAuthority(permission.getName().name()));
+                            });
+                        });
 
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 user, null, authorities);
