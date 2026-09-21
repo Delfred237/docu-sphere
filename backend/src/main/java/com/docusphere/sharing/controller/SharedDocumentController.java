@@ -7,7 +7,6 @@ import com.docusphere.sharing.domain.ShareLink;
 import com.docusphere.sharing.service.ShareLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
