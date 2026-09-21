@@ -1,5 +1,6 @@
 package com.docusphere.auth.domain;
 
+import com.docusphere.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,15 +14,11 @@ import java.security.SecureRandom;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PasswordResetToken {
+public class PasswordResetToken extends BaseEntity {
 
     private static final int EXPIRATION_MINUTES = 15;
     private static final int MAX_ATTEMPTS = 3;
     private static final SecureRandom secureRandom = new SecureRandom();
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false, length = 6)
     private String token;
