@@ -2,10 +2,15 @@ package com.docusphere.document.controller;
 
 import com.docusphere.auth.domain.User;
 import com.docusphere.document.domain.Document;
+import com.docusphere.document.domain.DocumentStatus;
 import com.docusphere.document.dto.DocumentResponse;
 import com.docusphere.document.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +35,23 @@ public class DocumentController {
 
         DocumentResponse response = documentService.uploadDocument(user, file, folderId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<DocumentResponse>> searchDocuments(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) DocumentStatus status,
+            @RequestParam(required = false) String mimeType,
+            @RequestParam(required = false) String folderId,
+            @RequestParam(required = false, defaultValue = "false") boolean rootOnly,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<DocumentResponse> results = documentService.searchDocuments(
+                user, name, status, mimeType, folderId, rootOnly, pageable
+        );
+
+        return ResponseEntity.ok(results);
     }
 
     @GetMapping("/{publicId}/download")

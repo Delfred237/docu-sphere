@@ -7,12 +7,16 @@ import com.docusphere.document.domain.Document;
 import com.docusphere.document.domain.DocumentStatus;
 import com.docusphere.document.dto.DocumentResponse;
 import com.docusphere.document.repository.DocumentRepository;
+import com.docusphere.document.specification.DocumentSpecifications;
 import com.docusphere.folder.domain.Folder;
 import com.docusphere.folder.repository.FolderRepository;
 import com.docusphere.storage.StorageProperties;
 import com.docusphere.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
@@ -36,6 +40,45 @@ public class DocumentService {
     private final FolderRepository folderRepository;
     private final StorageService storageService;
     private final StorageProperties storageProperties;
+
+
+    @Transactional(readOnly = true)
+    public Page<DocumentResponse> searchDocuments(
+            User owner,
+            String name,
+            DocumentStatus status,
+            String mimeType,
+            String folderPublicId,
+            boolean rootOnly,
+            Pageable pageable) {
+
+        // 1. Construction dynamique de la requête
+        Specification<Document> spec = Specification.where(DocumentSpecifications.hasOwner(owner));
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and(DocumentSpecifications.nameContains(name));
+        }
+        if (status != null) {
+            spec = spec.and(DocumentSpecifications.hasStatus(status));
+        }
+        if (mimeType != null && !mimeType.isBlank()) {
+            spec = spec.and(DocumentSpecifications.hasMimeType(mimeType));
+        }
+
+        // Logique spécifique au dossier : soit un dossier précis, soit la racine
+        if (folderPublicId != null && !folderPublicId.isBlank()) {
+            spec = spec.and(DocumentSpecifications.inFolder(folderPublicId));
+        } else if (rootOnly) {
+            spec = spec.and(DocumentSpecifications.isRootLevel());
+        }
+
+        // 2. Exécution paginée
+        // Note : Spring Data gère automatiquement le COUNT et le SELECT avec LIMIT/OFFSET
+        Page<Document> documentPage = documentRepository.findAll(spec, pageable);
+
+        // 3. Mapping vers DTO
+        return documentPage.map(DocumentResponse::fromEntity);
+    }
 
     @Transactional
     public DocumentResponse uploadDocument(User owner, MultipartFile file, String folderPublicId) {
