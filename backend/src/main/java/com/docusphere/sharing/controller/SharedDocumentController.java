@@ -5,6 +5,7 @@ import com.docusphere.document.dto.DocumentResponse;
 import com.docusphere.document.service.DocumentService;
 import com.docusphere.sharing.domain.ShareLink;
 import com.docusphere.sharing.service.ShareLinkService;
+import com.docusphere.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +21,7 @@ import java.io.InputStream;
 public class SharedDocumentController {
 
     private final ShareLinkService shareLinkService;
-    private final DocumentService documentService;
+    private final StorageService storageService;
 
     @GetMapping("/{token}/info")
     public ResponseEntity<DocumentResponse> getSharedDocumentInfo(@PathVariable String token) {
@@ -41,16 +42,11 @@ public class SharedDocumentController {
         shareLinkService.recordDownload(token);
 
         Document document = shareLink.getDocument();
-
-        InputStream inputStream = documentService
-                .downloadDocument(document.getPublicId(), document.getOwner());
+        InputStream fileStream = storageService.load(document.getStoredFilename());
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(document.getMimeType()))
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + document.getOriginalFilename() + "\""
-                )
-                .body(new InputStreamResource((inputStream)));
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFilename() + "\"")
+                .body(new InputStreamResource(fileStream));
     }
 }
