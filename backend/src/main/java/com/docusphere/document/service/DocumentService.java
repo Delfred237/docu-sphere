@@ -13,6 +13,9 @@ import com.docusphere.document.repository.DocumentRepository;
 import com.docusphere.document.specification.DocumentSpecifications;
 import com.docusphere.folder.domain.Folder;
 import com.docusphere.folder.repository.FolderRepository;
+import com.docusphere.notification.domain.NotificationType;
+import com.docusphere.notification.event.NotificationEvent;
+import com.docusphere.notification.listener.NotificationEventListener;
 import com.docusphere.storage.StorageProperties;
 import com.docusphere.storage.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -78,6 +81,17 @@ public class DocumentService {
                 Map.of("status", "PENDING_REVIEW")
         ));
 
+        eventPublisher.publishEvent(new NotificationEvent(
+                this,
+                NotificationType.DOCUMENT_SUBMITTED,
+                currentUser.getId(),
+                currentUser.getEmail(),
+                "Document Submitted",
+                "Your document \"" + document.getName() + "\" has been submitted for review.",
+                "/documents/" + document.getPublicId(),
+                false
+        ));
+
         return DocumentResponse.fromEntity(saved);
     }
 
@@ -117,6 +131,17 @@ public class DocumentService {
                 Map.of("comment", request.comment() != null ? request.comment() : "")
         ));
 
+        eventPublisher.publishEvent(new NotificationEvent(
+                this,
+                NotificationType.DOCUMENT_APPROVED,
+                document.getOwner().getId(),
+                document.getOwner().getEmail(),
+                "Document Approved",
+                "Your document \"" + document.getName() + "\" has been approved.",
+                "/documents/" + document.getPublicId(),
+                true // Envoyer par email
+        ));
+
         return DocumentResponse.fromEntity(saved);
     }
 
@@ -144,6 +169,18 @@ public class DocumentService {
                 saved.getPublicId(),
                 getClientIp(),
                 Map.of("comment", request.comment() != null ? request.comment() : "")
+        ));
+
+        // À la fin de rejectDocument() :
+        eventPublisher.publishEvent(new NotificationEvent(
+                this,
+                NotificationType.DOCUMENT_REJECTED,
+                document.getOwner().getId(),
+                document.getOwner().getEmail(),
+                "Document Rejected",
+                "Your document \"" + document.getName() + "\" has been rejected. Comment: " + request.comment(),
+                "/documents/" + document.getPublicId(),
+                true
         ));
 
         return DocumentResponse.fromEntity(saved);

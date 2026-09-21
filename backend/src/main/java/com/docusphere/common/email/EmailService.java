@@ -50,4 +50,29 @@ public class EmailService {
             log.error("Failed to send verification email to {}", toEmail, e);
         }
     }
+
+    @Async
+    public void sendNotificationEmail(String toEmail, String title, String message, String actionUrl) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            Context context = new Context();
+            context.setVariable("title", title);
+            context.setVariable("message", message);
+            context.setVariable("actionUrl", actionUrl);
+
+            String htmlContent = templateEngine.process("emails/notification", context);
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("[DocuSphere] " + title);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(mimeMessage);
+            log.info("Notification email sent to {}", toEmail);
+        } catch (MessagingException e) {
+            log.error("Failed to send notification email to {}", toEmail, e);
+        }
+    }
 }
