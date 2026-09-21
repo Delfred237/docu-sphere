@@ -1,0 +1,42 @@
+spring:
+  # Configuration H2 en mémoire pour les tests
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # JPA/Hibernate
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop  # H2 gère le schéma automatiquement pour les tests
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Désactiver Flyway pour les tests (H2 gère son propre schéma)
+  flyway:
+    enabled: false
+
+  # Mailpit simulé (pas de vrai SMTP en test)
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+
+  # JWT pour les tests
+  security:
+    jwt-secret: "test_secret_key_for_tests_only_not_for_production"
+    jwt-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.docusphere: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
