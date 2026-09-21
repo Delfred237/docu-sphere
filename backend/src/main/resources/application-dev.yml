@@ -34,6 +34,13 @@ app:
     first-name: "System"
     last-name: "Administrator"
 
+  # Configuration compte admin
+  manager:
+    email: "manager@docusphere.com"
+    password: "Manager123!" # Mot de passe par défaut pour le DEV uniquement
+    first-name: "System"
+    last-name: "Manager"
+
   # Configuration du stockage des documents
   storage:
     location: "./storage-dev" # Dossier local pour le dev. En prod, ce sera un volume monté ou /var/lib/docusphere

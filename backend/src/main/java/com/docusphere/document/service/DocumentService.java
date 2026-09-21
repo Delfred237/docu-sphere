@@ -1,11 +1,13 @@
 package com.docusphere.document.service;
 
 import com.docusphere.auth.domain.User;
+import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.InvalidFileException;
 import com.docusphere.common.exception.ResourceNotFoundException;
 import com.docusphere.document.domain.Document;
 import com.docusphere.document.domain.DocumentStatus;
 import com.docusphere.document.dto.DocumentResponse;
+import com.docusphere.document.dto.DocumentValidationRequest;
 import com.docusphere.document.repository.DocumentRepository;
 import com.docusphere.document.specification.DocumentSpecifications;
 import com.docusphere.folder.domain.Folder;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
@@ -41,6 +44,67 @@ public class DocumentService {
     private final StorageService storageService;
     private final StorageProperties storageProperties;
 
+
+    @Transactional
+    public DocumentResponse submitForReview(String publicId, User currentUser) {
+        Document document = getDocumentEntityForAction(publicId, currentUser);
+
+        if (document.getStatus() != DocumentStatus.DRAFT) {
+            throw new BusinessException(
+                    "Only documents in DRAFT status can be submitted for review.",
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_STATUS_TRANSITION"
+            );
+        }
+
+        document.setStatus(DocumentStatus.PENDING_REVIEW);
+        Document saved = documentRepository.save(document);
+        return DocumentResponse.fromEntity(saved);
+    }
+
+    @Transactional
+    public DocumentResponse approveDocument(String publicId, User reviewer, DocumentValidationRequest request) {
+        Document document = getDocumentEntityForAction(publicId, reviewer);
+
+        if (document.getStatus() != DocumentStatus.PENDING_REVIEW) {
+            throw new BusinessException(
+                    "Only documents in PENDING_REVIEW status can be approved.",
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_STATUS_TRANSITION"
+            );
+        }
+
+        // Règle métier optionnelle mais recommandée : le créateur ne devrait pas être le validateur
+        if (document.getOwner().getId().equals(reviewer.getId())) {
+            throw new BusinessException(
+                    "You cannot approve a document you own.",
+                    HttpStatus.FORBIDDEN,
+                    "SELF_APPROVAL_FORBIDDEN"
+            );
+        }
+
+        document.setStatus(DocumentStatus.APPROVED);
+        // Ici on pourrait sauvegarder le commentaire dans une table d'historique (voir étape Audit)
+        Document saved = documentRepository.save(document);
+        return DocumentResponse.fromEntity(saved);
+    }
+
+    @Transactional
+    public DocumentResponse rejectDocument(String publicId, User reviewer, DocumentValidationRequest request) {
+        Document document = getDocumentEntityForAction(publicId, reviewer);
+
+        if (document.getStatus() != DocumentStatus.PENDING_REVIEW) {
+            throw new BusinessException(
+                    "Only documents in PENDING_REVIEW status can be rejected.",
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_STATUS_TRANSITION"
+            );
+        }
+
+        document.setStatus(DocumentStatus.REJECTED);
+        Document saved = documentRepository.save(document);
+        return DocumentResponse.fromEntity(saved);
+    }
 
     @Transactional(readOnly = true)
     public Page<DocumentResponse> searchDocuments(
@@ -172,6 +236,34 @@ public class DocumentService {
     }
 
     // Utilitaire
+    /**
+     * Méthode utilitaire interne pour récupérer un document et vérifier les droits de base.
+     * Différent de getDocumentEntity qui est utilisé pour le téléchargement.
+     */
+    private Document getDocumentEntityForAction(String publicId, User user) {
+        Document document = documentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document", "publicId", publicId));
+
+        // Pour soumettre, il faut être le propriétaire.
+        // Pour approuver/rejeter, la sécurité est gérée par @PreAuthorize sur le controller,
+        // mais on s'assure ici que l'utilisateur a au moins accès à la lecture du document
+        // (soit il est owner, soit il a le droit de validation global).
+        // Pour simplifier le MVP : on considère que si tu as la permission DOCUMENT_VALIDATE,
+        // tu as le droit de lire n'importe quel document en attente.
+
+        boolean isOwner = document.getOwner().getId().equals(user.getId());
+        boolean isReviewer = user.getRoles().stream()
+                .flatMap(r -> r.getPermissions().stream())
+                .anyMatch(p -> p.getName() == com.docusphere.auth.domain.PermissionName.DOCUMENT_VALIDATE ||
+                        p.getName() == com.docusphere.auth.domain.PermissionName.DOCUMENT_REJECT);
+
+        if (!isOwner && !isReviewer) {
+            throw new com.docusphere.common.exception.ForbiddenException("Access denied to this document.");
+        }
+
+        return document;
+    }
+
     /**
      * Calcule le hash SHA-256 d'un fichier de manière efficace (par blocs).
      */
