@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/folders")
+@RequestMapping("/v1/folders")
 @RequiredArgsConstructor
 public class FolderController {
 

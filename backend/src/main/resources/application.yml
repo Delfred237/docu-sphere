@@ -36,6 +36,8 @@ server:
     include-binding-errors: always
     include-stacktrace: never # Sécurité : ne jamais exposer la stack trace au client
     include-exception: false
+  servlet:
+    context-path: /api
 
 logging:
   level:
