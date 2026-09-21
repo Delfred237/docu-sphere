@@ -1,5 +1,6 @@
 package com.docusphere.document.service;
 
+import com.docusphere.audit.event.AuditEvent;
 import com.docusphere.auth.domain.User;
 import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.InvalidFileException;
@@ -14,8 +15,10 @@ import com.docusphere.folder.domain.Folder;
 import com.docusphere.folder.repository.FolderRepository;
 import com.docusphere.storage.StorageProperties;
 import com.docusphere.storage.StorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -43,6 +47,8 @@ public class DocumentService {
     private final FolderRepository folderRepository;
     private final StorageService storageService;
     private final StorageProperties storageProperties;
+    private final ApplicationEventPublisher eventPublisher;
+    private final HttpServletRequest httpServletRequest;
 
 
     @Transactional
@@ -59,6 +65,19 @@ public class DocumentService {
 
         document.setStatus(DocumentStatus.PENDING_REVIEW);
         Document saved = documentRepository.save(document);
+
+        // Publication de l'audit
+        eventPublisher.publishEvent(new AuditEvent(
+                this,
+                "DOCUMENT_SUBMITTED",
+                currentUser.getId(),
+                currentUser.getEmail(),
+                "DOCUMENT",
+                saved.getPublicId(),
+                getClientIp(),
+                Map.of("status", "PENDING_REVIEW")
+        ));
+
         return DocumentResponse.fromEntity(saved);
     }
 
@@ -86,6 +105,18 @@ public class DocumentService {
         document.setStatus(DocumentStatus.APPROVED);
         // Ici on pourrait sauvegarder le commentaire dans une table d'historique (voir étape Audit)
         Document saved = documentRepository.save(document);
+
+        eventPublisher.publishEvent(new AuditEvent(
+                this,
+                "DOCUMENT_APPROVED",
+                reviewer.getId(),
+                reviewer.getEmail(),
+                "DOCUMENT",
+                saved.getPublicId(),
+                getClientIp(),
+                Map.of("comment", request.comment() != null ? request.comment() : "")
+        ));
+
         return DocumentResponse.fromEntity(saved);
     }
 
@@ -103,6 +134,18 @@ public class DocumentService {
 
         document.setStatus(DocumentStatus.REJECTED);
         Document saved = documentRepository.save(document);
+
+        eventPublisher.publishEvent(new AuditEvent(
+                this,
+                "DOCUMENT_REJECTED",
+                reviewer.getId(),
+                reviewer.getEmail(),
+                "DOCUMENT",
+                saved.getPublicId(),
+                getClientIp(),
+                Map.of("comment", request.comment() != null ? request.comment() : "")
+        ));
+
         return DocumentResponse.fromEntity(saved);
     }
 
@@ -200,6 +243,18 @@ public class DocumentService {
             document.setFolder(folder);
 
             Document savedDocument = documentRepository.save(document);
+
+            eventPublisher.publishEvent(new AuditEvent(
+                    this,
+                    "DOCUMENT_UPLOADED",
+                    owner.getId(),
+                    owner.getEmail(),
+                    "DOCUMENT",
+                    savedDocument.getPublicId(),
+                    getClientIp(),
+                    Map.of("upload", "Upload complete successfully!")
+            ));
+
             return DocumentResponse.fromEntity(savedDocument);
 
         } catch (IOException | NoSuchAlgorithmException e) {
@@ -236,6 +291,16 @@ public class DocumentService {
     }
 
     // Utilitaire
+
+    /**
+     * Méthode utilitaire pour récupérer l'IP
+     * @return String IP Adress
+     */
+    private String getClientIp() {
+        String xForwardedFor = httpServletRequest.getHeader("X-FORWARDED-FOR");
+        return (xForwardedFor != null) ? xForwardedFor.split(",")[0] : httpServletRequest.getRemoteAddr();
+    }
+
     /**
      * Méthode utilitaire interne pour récupérer un document et vérifier les droits de base.
      * Différent de getDocumentEntity qui est utilisé pour le téléchargement.
