@@ -34,6 +34,18 @@ app:
     first-name: "System"
     last-name: "Administrator"
 
+  # Configuration du stockage des documents
+  storage:
+    location: "./storage-dev" # Dossier local pour le dev. En prod, ce sera un volume monté ou /var/lib/docusphere
+    allowed-mime-types:
+      - "application/pdf"
+      - "image/jpg"
+      - "image/jpeg"
+      - "image/png"
+      - "application/vnd.openxmlformats-officedocument.word"
+      - "application/msword"
+    max-file-size: 52428800 #50 MB
+
 logging:
   level:
     com.docusphere: DEBUG
