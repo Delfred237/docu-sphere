@@ -78,3 +78,16 @@ $RECYCLE.BIN/
 .directory
 .trash/
 .nfs*
+
+# Docker
+.env
+.env.example
+.env.local
+.env.production
+
+# Logs
+logs/
+
+# Storage
+storage-dev/
+storage-prod/

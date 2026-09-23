@@ -1,0 +1,103 @@
+services:
+  # ============================================================================
+  # Backend Spring Boot (Production)
+  # ============================================================================
+  backend:
+    image: docusphere/backend:latest
+    container_name: docusphere-backend-prod
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database (à remplacer par des secrets en production)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/docusphere
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      
+      # JWT (à remplacer par des secrets en production)
+      APP_SECURITY_JWT_SECRET: ${JWT_SECRET}
+      APP_SECURITY_JWT_EXPIRATION_MS: 900000
+      APP_SECURITY_REFRESH_TOKEN_EXPIRATION_MS: 604800000
+      
+      # Admin user (à remplacer par des secrets en production)
+      APP_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      APP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      APP_ADMIN_FIRST_NAME: System
+      APP_ADMIN_LAST_NAME: Administrator
+      
+      # Mail (à configurer avec un vrai SMTP en production)
+      SPRING_MAIL_HOST: ${SMTP_HOST}
+      SPRING_MAIL_PORT: ${SMTP_PORT}
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD}
+      
+      # Storage
+      APP_STORAGE_LOCATION: /app/storage
+      
+      # JVM optimizations for production
+      JAVA_OPTS: "-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof"
+    volumes:
+      - backend-storage:/app/storage
+      - backend-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - docusphere-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # ============================================================================
+  # PostgreSQL Database (Production)
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: docusphere-postgres-prod
+    environment:
+      POSTGRES_DB: docusphere
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - docusphere-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+# ============================================================================
+# Volumes (Production)
+# ============================================================================
+volumes:
+  postgres-data-prod:
+    driver: local
+  backend-storage:
+    driver: local
+  backend-logs:
+    driver: local
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  docusphere-network:
+    driver: bridge
