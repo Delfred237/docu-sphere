@@ -32,6 +32,10 @@ spring:
       max-request-size: 50MB
       file-size-threshold: 2MB # Écrit sur disque après 2MB pour ne pas saturer la RAM
 
+# CORS Configuration (externalisée)
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
 server:
   port: 8080
   error:

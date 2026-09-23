@@ -7,6 +7,7 @@ import com.docusphere.auth.repository.*;
 import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.DuplicateResourceException;
 import com.docusphere.common.exception.ResourceNotFoundException;
+import com.docusphere.common.metrics.BusinessMetrics;
 import com.docusphere.config.JwtProperties;
 import com.docusphere.notification.domain.NotificationType;
 import com.docusphere.notification.event.NotificationEvent;
@@ -36,6 +37,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final LoginRateLimiterService rateLimiterService;
+    private final BusinessMetrics businessMetrics;
     private final JwtProperties jwtProperties;
 
 
@@ -114,6 +116,7 @@ public class AuthService {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, request.password())
             );
+            businessMetrics.incrementAuthenticationFailures();
         } catch (AuthenticationException e) {
             rateLimiterService.recordFailure(email);
             throw new BusinessException("Invalid email or password.", HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS");

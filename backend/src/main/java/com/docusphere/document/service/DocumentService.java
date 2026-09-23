@@ -5,6 +5,7 @@ import com.docusphere.auth.domain.User;
 import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.InvalidFileException;
 import com.docusphere.common.exception.ResourceNotFoundException;
+import com.docusphere.common.metrics.BusinessMetrics;
 import com.docusphere.document.domain.Document;
 import com.docusphere.document.domain.DocumentStatus;
 import com.docusphere.document.dto.DocumentResponse;
@@ -51,6 +52,7 @@ public class DocumentService {
     private final StorageService storageService;
     private final StorageProperties storageProperties;
     private final ApplicationEventPublisher eventPublisher;
+    private final BusinessMetrics businessMetrics;
     private final HttpServletRequest httpServletRequest;
 
 
@@ -142,6 +144,8 @@ public class DocumentService {
                 true // Envoyer par email
         ));
 
+        businessMetrics.incrementDocumentsValidated();
+
         return DocumentResponse.fromEntity(saved);
     }
 
@@ -182,6 +186,8 @@ public class DocumentService {
                 "/documents/" + document.getPublicId(),
                 true
         ));
+
+        businessMetrics.incrementDocumentsRejected();
 
         return DocumentResponse.fromEntity(saved);
     }
@@ -291,6 +297,8 @@ public class DocumentService {
                     getClientIp(),
                     Map.of("upload", "Upload complete successfully!")
             ));
+
+            businessMetrics.incrementDocumentsUploaded();
 
             return DocumentResponse.fromEntity(savedDocument);
 

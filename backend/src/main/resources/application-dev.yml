@@ -43,7 +43,7 @@ app:
 
   # Configuration du stockage des documents
   storage:
-    location: "./storage-dev" # Dossier local pour le dev. En prod, ce sera un volume monté ou /var/lib/docusphere
+    location: "./storage" # Dossier local pour le dev. En prod, ce sera un volume monté ou /var/lib/docusphere
     allowed-mime-types:
       - "application/pdf"
       - "image/jpg"

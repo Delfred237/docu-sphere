@@ -1,5 +1,6 @@
 package com.docusphere.common.email;
 
+import com.docusphere.common.metrics.BusinessMetrics;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+    private final BusinessMetrics businessMetrics;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -44,10 +46,12 @@ public class EmailService {
             helper.setText(htmlContent, true); // true = HTML
 
             mailSender.send(message);
+            businessMetrics.incrementEmailsSent();
             log.info("Verification code sent to {}", toEmail);
 
         } catch (MessagingException e) {
             log.error("Failed to send verification email to {}", toEmail, e);
+            businessMetrics.incrementEmailsFailed();
         }
     }
 
@@ -70,9 +74,11 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
+            businessMetrics.incrementEmailsSent();
             log.info("Notification email sent to {}", toEmail);
         } catch (MessagingException e) {
             log.error("Failed to send notification email to {}", toEmail, e);
+            businessMetrics.incrementEmailsFailed();
         }
     }
 }
