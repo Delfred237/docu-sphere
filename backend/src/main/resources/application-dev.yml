@@ -53,6 +53,10 @@ app:
       - "application/msword"
     max-file-size: 52428800 #50 MB
 
+# CORS Configuration (externalisée)
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
 logging:
   level:
     com.docusphere: DEBUG
