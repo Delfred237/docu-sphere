@@ -8,6 +8,7 @@ import { RegisterPage } from "./features/auth/pages/Register";
 import { AppLayout } from "./components/layout/AppLayout";
 import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 import { DocumentsPage } from "./features/documents/pages/DocumentsPage";
+import { FoldersPage } from "./features/folders/pages/FoldersPage";
 
 function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -67,6 +68,7 @@ function App() {
         >
           <Route path="/" element={<DashboardPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/folders" element={<FoldersPage />} />
         </Route>
 
         {/* Catch all */}
