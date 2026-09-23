@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +18,9 @@ import java.util.List;
 public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "Bearer Authentication";
+
+    @Value("${server.servlet.context-path:}")
+    private String contextPath;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -41,13 +45,14 @@ public class OpenApiConfig {
                 """)
                         .contact(new Contact()
                                 .name("DocuSphere Team")
-                                .email("support@docusphere.com")
+                                .email("delfredtene17@gmail.com")
                                 .url("https://docusphere.com"))
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8080").description("Local Development"),
+                        new Server().url("http://localhost:8080" + contextPath)
+                                .description("Local Development"),
                         new Server().url("https://api.docusphere.com").description("Production")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))

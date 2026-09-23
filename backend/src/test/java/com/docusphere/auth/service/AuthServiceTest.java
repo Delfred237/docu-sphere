@@ -20,6 +20,7 @@ import com.docusphere.auth.repository.RoleRepository;
 import com.docusphere.auth.repository.UserRepository;
 import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.DuplicateResourceException;
+import com.docusphere.common.metrics.BusinessMetrics;
 import com.docusphere.config.JwtProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,7 @@ class AuthServiceTest {
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private LoginRateLimiterService rateLimiterService;
     @Mock private JwtProperties jwtProperties;
+    @Mock private BusinessMetrics businessMetrics;
 
     @InjectMocks private AuthService authService;
 

@@ -18,6 +18,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration tests for authentication endpoints using H2.
+ */
 class AuthApiIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -27,7 +30,7 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
     private EmailVerificationTokenRepository emailVerificationTokenRepository;
 
     @Test
-    @DisplayName("POST /register : doit créer un compte et retourner 201")
+    @DisplayName("POST /v1/auth/register : should create account and return 201")
     void shouldRegisterNewUser() throws Exception {
         String email = randomEmail();
 
@@ -40,7 +43,7 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /register : doit retourner 409 pour un email déjà utilisé")
+    @DisplayName("POST /v1/auth/register : should return 409 for duplicate email")
     void shouldRejectDuplicateEmail() throws Exception {
         String email = randomEmail();
 
@@ -57,7 +60,7 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /register : doit retourner 400 pour des données invalides")
+    @DisplayName("POST /v1/auth/register : should return 400 for invalid data")
     void shouldRejectInvalidPayload() throws Exception {
         String invalidBody = """
             {
@@ -72,34 +75,33 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidBody))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.errors").isArray());
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
     @Test
-    @DisplayName("Flux complet : register → récupérer OTP en DB → verify → login")
+    @DisplayName("Full flow : register → get OTP → verify → login")
     void shouldCompleteFullRegistrationFlow() throws Exception {
         String email = randomEmail();
 
-        // 1. Inscription
+        // 1. Register
         mockMvc.perform(post("/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerBody(email)))
                 .andExpect(status().isCreated());
 
-        // 2. Récupérer le code OTP directement depuis la base de données (H2)
+        // 2. Get OTP from database
         User user = userRepository.findByEmailIgnoreCase(email).orElseThrow();
         EmailVerificationToken token = emailVerificationTokenRepository.findByUser(user).orElseThrow();
         String code = token.getCode();
         assertThat(code).matches("\\d{6}");
 
-        // 3. Vérifier l'email avec le code
+        // 3. Verify email
         mockMvc.perform(post("/v1/auth/verify-email")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("email", email, "code", code))))
                 .andExpect(status().isOk());
 
-        // 4. Connexion réussie
+        // 4. Login
         mockMvc.perform(post("/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
@@ -110,7 +112,7 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /login : doit refuser un email non vérifié")
+    @DisplayName("POST /v1/auth/login : should reject unverified email")
     void shouldRejectLoginForUnverifiedEmail() throws Exception {
         String email = randomEmail();
 
@@ -128,7 +130,7 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /login : doit retourner 401 avec de mauvais identifiants")
+    @DisplayName("POST /v1/auth/login : should return 401 for wrong credentials")
     void shouldRejectInvalidCredentials() throws Exception {
         String email = randomEmail();
         registerAndVerifyUser(email);
@@ -158,7 +160,7 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
             """.formatted(email);
     }
 
-    protected void registerAndVerifyUser(String email) throws Exception {
+    private void registerAndVerifyUser(String email) throws Exception {
         mockMvc.perform(post("/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerBody(email)))

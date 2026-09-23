@@ -6,9 +6,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
- * Classe de base pour tous les tests d'intégration.
+ * Base class for integration tests using H2 in-memory database.
+ * Used for local development testing.
+ *
+ * For CI/CD with real PostgreSQL, see BaseTestcontainersIntegrationTest.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

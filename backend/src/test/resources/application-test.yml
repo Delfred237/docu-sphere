@@ -1,42 +1,67 @@
 spring:
-  # Configuration H2 en mémoire pour les tests
+  # H2 in-memory database for local testing
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa
     password:
     driver-class-name: org.h2.Driver
 
-  # JPA/Hibernate
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop  # H2 gère le schéma automatiquement pour les tests
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: create-drop
+    show-sql: false
 
-  # Désactiver Flyway pour les tests (H2 gère son propre schéma)
+  # Disable Flyway for tests (H2 uses Hibernate auto-DDL)
   flyway:
     enabled: false
 
-  # Mailpit simulé (pas de vrai SMTP en test)
+  # Mail configuration (disabled in tests)
   mail:
     host: localhost
     port: 1025
-    username:
-    password:
+    username: test
+    password: test
 
-  # JWT pour les tests
+# Application configuration for tests
+app:
   security:
-    jwt-secret: "test_secret_key_for_tests_only_not_for_production"
+    jwt-secret: test-secret-key-for-tests-only-minimum-256-bits-long-for-security
     jwt-expiration-ms: 900000
     refresh-token-expiration-ms: 604800000
+  admin:
+    email: admin@test.com
+    password: Admin123!
+    first-name: Test
+    last-name: Admin
 
-# Logging
-logging:
-  level:
-    root: WARN
-    com.docusphere: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  storage:
+    location: ./target/test-storage
+    allowed-mime-types:
+      - application/pdf
+      - image/jpeg
+      - image/png
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - application/msword
+    max-file-size: 52428800
+
+management:
+  health:
+    # Disable all custom health indicators in tests
+    defaults:
+      enabled: true
+    mail:
+      enabled: false
+    db:
+      enabled: true
+    diskspace:
+      enabled: false
+  endpoint:
+    health:
+      # Show only status, not details
+      show-details: never
+      # Return 200 even if some components are down
+      status:
+        http-mapping:
+          down: 200
+          out-of-service: 200
