@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,6 +9,8 @@ import {
   Settings,
   LogOut,
   User,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -21,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/features/auth/stores/authStore";
-import { Logo } from "../shared/Logo";
+import { Logo } from "@/components/shared/Logo";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -33,69 +36,81 @@ const navigation = [
 export function AppLayout() {
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const currentPageTitle =
+    navigation.find((item) => item.href === location.pathname)?.name ||
+    "DocuSphere";
+
+  const handleNavigationClick = () => {
+    setIsSidebarOpen(false);
+  };
 
   return (
-    <div className="flex h-screen bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-slate-200 flex flex-col shrink-0">
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-200">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {/* Mobile overlay */}
+      {isSidebarOpen && (
+        <div
+          role="presentation"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex lg:w-60 bg-white border-r border-slate-200 flex-col shrink-0">
+        <SidebarContent onNavigate={handleNavigationClick} />
+      </aside>
+
+      {/* Sidebar - Mobile Drawer */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Close button for mobile */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
           <Logo size="sm" />
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.href;
-
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                <Icon className="h-5 w-5 shrink-0" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Settings */}
-        <div className="px-3 py-4 border-t border-slate-200">
-          <Link
-            to="/settings"
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(false)}
           >
-            <Settings className="h-5 w-5 shrink-0" />
-            <span>Settings</span>
-          </Link>
+            <X className="h-5 w-5 text-slate-600" />
+            <span className="sr-only">Close menu</span>
+          </Button>
         </div>
+        <SidebarContent onNavigate={handleNavigationClick} showLogo={false} />
       </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-          {/* Page title / breadcrumb */}
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold text-slate-900">
-              {navigation.find((item) => item.href === location.pathname)
-                ?.name || "DocuSphere"}
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0">
+          {/* Left side: hamburger + title */}
+          <div className="flex items-center gap-3">
+            {/* Hamburger button - mobile only */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5 text-slate-600" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+
+            {/* Page title */}
+            <h2 className="text-lg font-semibold text-slate-900 truncate">
+              {currentPageTitle}
             </h2>
           </div>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-2">
+          {/* Right side: notifications + user menu */}
+          <div className="flex items-center gap-1 md:gap-2">
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5 text-slate-600" />
-              {/* Unread indicator */}
               <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full" />
               <span className="sr-only">Notifications</span>
             </Button>
@@ -158,5 +173,65 @@ export function AppLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+// Composant réutilisable pour le contenu de la sidebar
+interface SidebarContentProps {
+  onNavigate: () => void;
+  showLogo?: boolean;
+}
+
+function SidebarContent({
+  onNavigate,
+  showLogo = true,
+}: Readonly<SidebarContentProps>) {
+  const location = useLocation();
+
+  return (
+    <>
+      {/* Logo (desktop uniquement, mobile a déjà le logo dans le header du drawer) */}
+      {showLogo && (
+        <div className="h-16 flex items-center px-6 border-b border-slate-200">
+          <Logo size="sm" />
+        </div>
+      )}
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.href;
+
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              onClick={onNavigate}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-primary-50 text-primary-700"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              <span>{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Settings */}
+      <div className="px-3 py-4 border-t border-slate-200">
+        <Link
+          to="/settings"
+          onClick={onNavigate}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+        >
+          <Settings className="h-5 w-5 shrink-0" />
+          <span>Settings</span>
+        </Link>
+      </div>
+    </>
   );
 }
