@@ -6,11 +6,9 @@ import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { VerifyEmailPage } from "@/features/auth/pages/VerifyEmailPage";
 import { RegisterPage } from "./features/auth/pages/Register";
 import { AppLayout } from "./components/layout/AppLayout";
+import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 
 // Placeholder pages
-function DashboardPage() {
-  return <div className="text-slate-900">Dashboard (TODO)</div>;
-}
 
 function DocumentsPage() {
   return <div className="text-slate-900">Documents (TODO)</div>;
