@@ -139,9 +139,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner on local image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
@@ -162,9 +161,11 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # ============================================================================
   # JOB 3: Notification (optionnel)
