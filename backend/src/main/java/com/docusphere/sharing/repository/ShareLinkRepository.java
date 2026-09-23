@@ -11,4 +11,6 @@ public interface ShareLinkRepository extends JpaRepository<ShareLink, Long> {
     Optional<ShareLink> findByTokenAndDeletedFalse(String token);
 
     Optional<ShareLink> findByPublicIdAndDeletedFalse(String linkPublicId);
+
+    long countByCreatedByUserIdAndDeletedFalse(Long id);
 }

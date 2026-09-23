@@ -22,4 +22,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
 
     // Recherche par publicId
     Optional<Folder> findByPublicId(String publicId);
+
+    long countByOwnerIdAndDeletedFalse(Long id);
 }
