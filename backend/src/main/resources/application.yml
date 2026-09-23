@@ -15,6 +15,9 @@ spring:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 20 # Optimisation N+1
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
   # Migrations
   flyway:

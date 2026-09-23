@@ -11,6 +11,11 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
   # Disable Flyway for tests (H2 uses Hibernate auto-DDL)
   flyway:
