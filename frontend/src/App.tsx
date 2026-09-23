@@ -7,12 +7,7 @@ import { VerifyEmailPage } from "@/features/auth/pages/VerifyEmailPage";
 import { RegisterPage } from "./features/auth/pages/Register";
 import { AppLayout } from "./components/layout/AppLayout";
 import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
-
-// Placeholder pages
-
-function DocumentsPage() {
-  return <div className="text-slate-900">Documents (TODO)</div>;
-}
+import { DocumentsPage } from "./features/documents/pages/DocumentsPage";
 
 function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isAuthenticated, isLoading } = useAuthStore();

@@ -9,8 +9,9 @@ public record DocumentResponse(
         String mimeType,
         Long size,
         DocumentStatus status,
-        String folderPublicId
-) {
+        String folderPublicId,
+        String folderName,
+        String createdAt) {
     public static DocumentResponse fromEntity(Document doc) {
         return new DocumentResponse(
                 doc.getPublicId(),
@@ -18,7 +19,9 @@ public record DocumentResponse(
                 doc.getMimeType(),
                 doc.getSize(),
                 doc.getStatus(),
-                doc.getFolder() != null ? doc.getFolder().getPublicId() : null
+                doc.getFolder() != null ? doc.getFolder().getPublicId() : null,
+                doc.getFolder() != null ? doc.getFolder().getName() : null,
+                doc.getCreatedAt().toString()
         );
     }
 }

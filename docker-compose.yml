@@ -74,7 +74,7 @@ services:
       # Storage
       APP_STORAGE_LOCATION: /app/storage
     volumes:
-      - ./backend/storage-dev:/app/storage
+      - backend-storage:/app/storage
       - ./backend/logs:/app/logs
     depends_on:
       postgres:
@@ -87,6 +87,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  backend-storage:
     driver: local
 
 networks:

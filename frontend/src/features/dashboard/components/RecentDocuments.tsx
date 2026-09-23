@@ -55,7 +55,7 @@ export function RecentDocuments({ documents }: Readonly<RecentDocumentsProps>) {
           key={doc.publicId}
           className="flex items-center gap-3 py-3 hover:bg-slate-50 -mx-2 px-2 rounded-md transition-colors"
         >
-          <div className="h-8 w-8 rounded-md bg-slate-50 flex items-center justify-center flex-shrink-0">
+          <div className="h-8 w-8 rounded-md bg-slate-50 flex items-center justify-center shrink-0">
             {getFileIcon(doc.mimeType)}
           </div>
           <div className="flex-1 min-w-0">
