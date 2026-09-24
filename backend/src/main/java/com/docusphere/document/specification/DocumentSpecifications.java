@@ -11,6 +11,13 @@ public final class DocumentSpecifications {
         throw new UnsupportedOperationException("Utility class");
     }
 
+    // CRITIQUE : Filtrer uniquement les documents non supprimés
+    public static Specification<Document> isNotDeleted() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("deleted"), false);
+    }
+
+
     // CRITIQUE : Sécurité. Toujours filtrer par propriétaire pour éviter les fuites de données.
     public static Specification<Document> hasOwner(User owner) {
         return (root, query, criteriaBuilder) ->

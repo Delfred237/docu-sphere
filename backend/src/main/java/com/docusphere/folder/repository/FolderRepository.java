@@ -17,6 +17,12 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     // Dossiers enfants d'un dossier spécifique
     List<Folder> findByParentOrderByCreatedAtDesc(Folder parent);
 
+    List<Folder> findAllByOwnerIdAndDeletedFalse(Long ownerId);
+
+    List<Folder> findAllByParentIsNullAndOwnerIdAndDeletedFalse(Long ownerId);
+
+    List<Folder> findAllByParentIdAndDeletedFalse(Long parentId);
+
     // Vérification de doublon (nom + propriétaire + parent)
     boolean existsByNameAndOwnerIdAndParentIdAndDeletedFalse(String name, Long ownerId, Long parentId);
 
@@ -24,4 +30,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     Optional<Folder> findByPublicId(String publicId);
 
     long countByOwnerIdAndDeletedFalse(Long id);
+
+    boolean existsByParentIdAndDeletedFalse(Long id);
 }

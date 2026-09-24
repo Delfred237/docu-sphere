@@ -1,16 +1,21 @@
 package com.docusphere.folder.service;
 
 import com.docusphere.auth.domain.User;
+import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.DuplicateResourceException;
+import com.docusphere.common.exception.ForbiddenException;
 import com.docusphere.common.exception.ResourceNotFoundException;
+import com.docusphere.document.repository.DocumentRepository;
 import com.docusphere.folder.domain.Folder;
 import com.docusphere.folder.dto.CreateFolderRequest;
 import com.docusphere.folder.dto.FolderResponse;
 import com.docusphere.folder.repository.FolderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +24,7 @@ import java.util.UUID;
 public class FolderService {
 
     private final FolderRepository folderRepository;
+    private final DocumentRepository documentRepository;
 
     @Transactional
     public FolderResponse createFolder(User owner, CreateFolderRequest request) {
@@ -53,7 +59,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<FolderResponse> getRootFolders(User owner) {
-        return folderRepository.findByOwnerAndParentIsNullOrderByCreatedAtDesc(owner)
+        return folderRepository.findAllByParentIsNullAndOwnerIdAndDeletedFalse(owner.getId())
                 .stream()
                 .map(FolderResponse::fromEntity)
                 .toList();
@@ -69,9 +75,42 @@ public class FolderService {
             throw new IllegalArgumentException("Access denied to this folder.");
         }
 
-        return folderRepository.findByParentOrderByCreatedAtDesc(parent)
+        return folderRepository.findAllByParentIdAndDeletedFalse(parent.getId())
                 .stream()
                 .map(FolderResponse::fromEntity)
                 .toList();
+    }
+
+    @Transactional
+    public void deleteFolder(String publicId, User currentUser) {
+        Folder folder = folderRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Folder", "publicId", publicId));
+
+        // Vérifier que l'utilisateur est le propriétaire
+        if (!folder.getOwner().getId().equals(currentUser.getId())) {
+            throw new ForbiddenException("You cannot delete a folder you don't own");
+        }
+
+        // Vérifier que le dossier est vide (pas d'enfants ni de documents)
+        if (folderRepository.existsByParentIdAndDeletedFalse(folder.getId())) {
+            throw new BusinessException(
+                    "Cannot delete folder with subfolders. Delete subfolders first.",
+                    HttpStatus.BAD_REQUEST,
+                    "FOLDER_NOT_EMPTY"
+            );
+        }
+
+        if (documentRepository.existsByFolderIdAndDeletedFalse(folder.getId())) {
+            throw new BusinessException(
+                    "Cannot delete folder with documents. Move or delete documents first.",
+                    HttpStatus.BAD_REQUEST,
+                    "FOLDER_NOT_EMPTY"
+            );
+        }
+
+        // Soft delete
+        folder.setDeleted(true);
+        folder.setDeletedAt(Instant.now());
+        folderRepository.save(folder);
     }
 }

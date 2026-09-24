@@ -39,4 +39,12 @@ public class FolderController {
             @PathVariable String publicId) {
         return ResponseEntity.ok(folderService.getSubFolders(user, publicId));
     }
+
+    @DeleteMapping("/{publicId}")
+    public ResponseEntity<Void> deleteFolder(
+            @AuthenticationPrincipal User user,
+            @PathVariable String publicId) {
+        folderService.deleteFolder(publicId, user);
+        return ResponseEntity.noContent().build();
+    }
 }

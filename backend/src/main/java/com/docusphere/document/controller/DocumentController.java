@@ -117,4 +117,12 @@ public class DocumentController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFilename() + "\"")
                 .body(new InputStreamResource(inputStream));
     }
+
+    @DeleteMapping("/{publicId}")
+    public ResponseEntity<Void> deleteDocument(
+            @AuthenticationPrincipal User user,
+            @PathVariable String publicId) {
+        documentService.deleteDocument(publicId, user);
+        return ResponseEntity.noContent().build();
+    }
 }

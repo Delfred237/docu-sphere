@@ -3,6 +3,7 @@ package com.docusphere.document.service;
 import com.docusphere.audit.event.AuditEvent;
 import com.docusphere.auth.domain.User;
 import com.docusphere.common.exception.BusinessException;
+import com.docusphere.common.exception.ForbiddenException;
 import com.docusphere.common.exception.InvalidFileException;
 import com.docusphere.common.exception.ResourceNotFoundException;
 import com.docusphere.common.metrics.BusinessMetrics;
@@ -40,6 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Map;
 
 @Slf4j
@@ -203,7 +205,9 @@ public class DocumentService {
             Pageable pageable) {
 
         // 1. Construction dynamique de la requête
-        Specification<Document> spec = Specification.where(DocumentSpecifications.hasOwner(owner));
+        Specification<Document> spec = Specification.where(
+                DocumentSpecifications.isNotDeleted())
+                .and(DocumentSpecifications.hasOwner(owner));
 
         if (name != null && !name.isBlank()) {
             spec = spec.and(DocumentSpecifications.nameContains(name));
@@ -333,6 +337,34 @@ public class DocumentService {
     public InputStream downloadDocument(String publicId, User user) {
         Document document = getDocumentEntity(publicId, user);
         return storageService.load(document.getStoredFilename());
+    }
+
+    @Transactional
+    public void deleteDocument(String publicId, User currentUser) {
+        Document document = documentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document", "publicId", publicId));
+
+        // Vérifier que l'utilisateur est le propriétaire
+        if (!document.getOwner().getId().equals(currentUser.getId())) {
+            throw new ForbiddenException("You cannot delete a document you don't own");
+        }
+
+        // Soft delete
+        document.setDeleted(true);
+        document.setDeletedAt(Instant.now());
+        documentRepository.save(document);
+
+        // Publier un événement d'audit
+        eventPublisher.publishEvent(new AuditEvent(
+                this,
+                "DOCUMENT_DELETED",
+                currentUser.getId(),
+                currentUser.getEmail(),
+                "DOCUMENT",
+                document.getPublicId(),
+                getClientIp(),
+                Map.of("name", document.getName())
+        ));
     }
 
     // Utilitaire
