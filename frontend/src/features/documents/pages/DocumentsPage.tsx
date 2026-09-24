@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UploadDropzone } from "../components/UploadDropzone";
@@ -41,6 +41,7 @@ export function DocumentsPage() {
     mutationFn: (publicId: string) => documentService.submitForReview(publicId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
@@ -49,6 +50,7 @@ export function DocumentsPage() {
     mutationFn: (publicId: string) => documentService.approveDocument(publicId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
@@ -57,6 +59,7 @@ export function DocumentsPage() {
     mutationFn: (publicId: string) => documentService.rejectDocument(publicId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
@@ -110,11 +113,13 @@ export function DocumentsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Documents</h1>
+          <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
+            Documents
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             Manage and review your documents
           </p>
@@ -123,6 +128,7 @@ export function DocumentsPage() {
           variant="outline"
           onClick={() => refetch()}
           disabled={isFetching}
+          className="self-start sm:self-auto"
         >
           <RefreshCw
             className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
@@ -132,7 +138,17 @@ export function DocumentsPage() {
       </div>
 
       {/* Error alert */}
-      {error && <Alert variant="error" message={error} />}
+      {error && (
+        <div className="flex items-start justify-between gap-4">
+          <Alert variant="error" message={error} />
+          <button
+            onClick={() => setError(null)}
+            className="text-sm text-slate-400 hover:text-slate-600 flex-shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Upload zone */}
       <UploadDropzone
@@ -149,12 +165,13 @@ export function DocumentsPage() {
       )}
 
       {/* Search */}
-      <div className="flex gap-3">
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
         <Input
           placeholder="Search documents..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
+          className="pl-9"
         />
       </div>
 

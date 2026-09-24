@@ -11,11 +11,14 @@ import {
 } from "@/features/documents/services/document.service";
 import { folderService, type Folder } from "../services/folder.service";
 import { Alert } from "@/components/shared/Alert";
+import { Button } from "@/components/ui/button";
+import { FolderIcon, X } from "lucide-react";
 
 export function FoldersPage() {
   const queryClient = useQueryClient();
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Fetch all folders for breadcrumb
   const { data: allFolders = [] } = useQuery({
@@ -45,11 +48,9 @@ export function FoldersPage() {
   const deleteMutation = useMutation({
     mutationFn: (publicId: string) => documentService.deleteDocument(publicId),
     onSuccess: async () => {
-      // Force le refetch des documents du dossier actuel
       await queryClient.refetchQueries({
         queryKey: ["documents", selectedFolder?.publicId],
       });
-      // Met à jour aussi le dashboard
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => {
@@ -60,6 +61,7 @@ export function FoldersPage() {
   const handleFolderSelect = (folder: Folder | null) => {
     setSelectedFolder(folder);
     setError(null);
+    setIsSidebarOpen(false);
   };
 
   const handleDownload = async (doc: Document) => {
@@ -117,22 +119,75 @@ export function FoldersPage() {
   };
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar with folder tree */}
-      <aside className="w-64 border-r border-slate-200 bg-white p-4 overflow-y-auto">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Folders</h3>
-          <CreateFolderDialog parentId={selectedFolder?.publicId} />
-        </div>
-        <FolderTree
-          selectedFolderId={selectedFolder?.publicId || null}
-          onFolderSelect={handleFolderSelect}
+    <div className="flex h-full relative">
+      {/* Mobile overlay */}
+      {isSidebarOpen && (
+        <div
+          role="presentation"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
         />
+      )}
+
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex lg:w-64 border-r border-slate-200 bg-white p-4 overflow-y-auto flex-shrink-0">
+        <div className="w-full">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">
+              Folders
+            </h3>
+            <CreateFolderDialog parentId={selectedFolder?.publicId} />
+          </div>
+          <FolderTree
+            selectedFolderId={selectedFolder?.publicId || null}
+            onFolderSelect={handleFolderSelect}
+          />
+        </div>
+      </aside>
+
+      {/* Sidebar - Mobile Drawer */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
+          <h3 className="text-sm font-semibold text-slate-900">Folders</h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X className="h-5 w-5 text-slate-600" />
+            <span className="sr-only">Close folders</span>
+          </Button>
+        </div>
+        <div className="flex-1 p-4 overflow-y-auto">
+          <div className="mb-4">
+            <CreateFolderDialog parentId={selectedFolder?.publicId} />
+          </div>
+          <FolderTree
+            selectedFolderId={selectedFolder?.publicId || null}
+            onFolderSelect={handleFolderSelect}
+          />
+        </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-6xl mx-auto space-y-6">
+      <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <div className="space-y-6">
+          {/* Mobile button to open folders */}
+          <div className="lg:hidden">
+            <Button
+              variant="outline"
+              onClick={() => setIsSidebarOpen(true)}
+              className="w-full"
+            >
+              <FolderIcon className="h-4 w-4 mr-2" />
+              Browse Folders
+            </Button>
+          </div>
+
           {/* Header with breadcrumb */}
           <div>
             <FolderBreadcrumb
@@ -140,23 +195,23 @@ export function FoldersPage() {
               currentFolder={selectedFolder}
               onFolderClick={handleFolderSelect}
             />
-            <h1 className="text-2xl font-semibold text-slate-900 mt-2">
+            <h1 className="text-xl md:text-2xl font-semibold text-slate-900 mt-2">
               {selectedFolder ? selectedFolder.name : "All Documents"}
             </h1>
           </div>
 
           {/* Error alert */}
           {error && (
-            <div className="flex justify-end">
+            <div className="flex items-start justify-between gap-4">
+              <Alert variant="error" message={error} />
               <button
                 onClick={() => setError(null)}
-                className="text-sm text-slate-400 hover:text-slate-600"
+                className="text-sm text-slate-400 hover:text-slate-600 flex-shrink-0"
               >
                 ✕
               </button>
             </div>
           )}
-          {error && <Alert variant="error" message={error} />}
 
           {/* Upload zone */}
           <UploadDropzone onUpload={handleUpload} />
