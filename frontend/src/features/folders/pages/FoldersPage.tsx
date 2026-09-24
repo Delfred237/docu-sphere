@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FolderTree } from "../components/FolderTree";
 import { FolderBreadcrumb } from "../components/FolderBreadcrumb";
 import { CreateFolderDialog } from "../components/CreateFolderDialog";
@@ -13,6 +13,7 @@ import { folderService, type Folder } from "../services/folder.service";
 import { Alert } from "@/components/shared/Alert";
 
 export function FoldersPage() {
+  const queryClient = useQueryClient();
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +22,6 @@ export function FoldersPage() {
     queryKey: ["all-folders"],
     queryFn: async () => {
       const root = await folderService.getRootFolders();
-      // Pour simplifier, on ne charge que les root folders pour le breadcrumb
-      // Une vraie implémentation chargerait récursivement
       return root;
     },
   });
@@ -40,6 +39,22 @@ export function FoldersPage() {
         rootOnly: !selectedFolder,
         size: 100,
       }),
+  });
+
+  // Delete document mutation
+  const deleteMutation = useMutation({
+    mutationFn: (publicId: string) => documentService.deleteDocument(publicId),
+    onSuccess: async () => {
+      // Force le refetch des documents du dossier actuel
+      await queryClient.refetchQueries({
+        queryKey: ["documents", selectedFolder?.publicId],
+      });
+      // Met à jour aussi le dashboard
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: () => {
+      setError("Failed to delete document");
+    },
   });
 
   const handleFolderSelect = (folder: Folder | null) => {
@@ -85,6 +100,22 @@ export function FoldersPage() {
     }
   };
 
+  const handleDelete = (doc: Document) => {
+    deleteMutation.mutate(doc.publicId);
+  };
+
+  const handleUpload = async (files: File[]) => {
+    setError(null);
+    try {
+      for (const file of files) {
+        await documentService.uploadDocument(file, selectedFolder?.publicId);
+      }
+      refetch();
+    } catch {
+      setError("Failed to upload files");
+    }
+  };
+
   return (
     <div className="flex h-full">
       {/* Sidebar with folder tree */}
@@ -115,25 +146,20 @@ export function FoldersPage() {
           </div>
 
           {/* Error alert */}
+          {error && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setError(null)}
+                className="text-sm text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           {error && <Alert variant="error" message={error} />}
 
           {/* Upload zone */}
-          <UploadDropzone
-            onUpload={async (files) => {
-              setError(null);
-              try {
-                for (const file of files) {
-                  await documentService.uploadDocument(
-                    file,
-                    selectedFolder?.publicId,
-                  );
-                }
-                refetch();
-              } catch {
-                setError("Failed to upload files");
-              }
-            }}
-          />
+          <UploadDropzone onUpload={handleUpload} />
 
           {/* Documents table */}
           {isLoading ? (
@@ -147,6 +173,7 @@ export function FoldersPage() {
               onSubmit={handleSubmit}
               onApprove={handleApprove}
               onReject={handleReject}
+              onDelete={handleDelete}
             />
           )}
         </div>

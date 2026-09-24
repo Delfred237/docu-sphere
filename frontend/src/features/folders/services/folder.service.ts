@@ -30,4 +30,12 @@ export const folderService = {
     const response = await apiClient.post<Folder>("/v1/folders", data);
     return response.data;
   },
+
+  async deleteFolder(publicId: string): Promise<void> {
+    console.log("Deleting folder:", publicId);
+    console.log("URL:", `/v1/folders/${publicId}`);
+    const response = await apiClient.delete(`/v1/folders/${publicId}`);
+    console.log('Response:', response);
+    return response.data;
+  },
 };

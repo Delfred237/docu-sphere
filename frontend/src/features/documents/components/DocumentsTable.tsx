@@ -7,6 +7,7 @@ import {
   CheckCircle,
   XCircle,
   Send,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +22,7 @@ import { FileIcon } from "./FileIcon";
 import { StatusBadge } from "./StatusBadge";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Document } from "../services/document.service";
+import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -28,6 +30,7 @@ interface DocumentsTableProps {
   onSubmit: (doc: Document) => void;
   onApprove: (doc: Document) => void;
   onReject: (doc: Document) => void;
+  onDelete: (doc: Document) => void;
 }
 
 type SortField = "name" | "size" | "createdAt" | null;
@@ -61,10 +64,15 @@ export function DocumentsTable({
   onSubmit,
   onApprove,
   onReject,
+  onDelete,
 }: Readonly<DocumentsTableProps>) {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
+    null,
+  );
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -113,6 +121,19 @@ export function DocumentsTable({
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
+  };
+
+  const handleDeleteClick = (doc: Document) => {
+    setDocumentToDelete(doc);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (documentToDelete) {
+      onDelete(documentToDelete);
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
+    }
   };
 
   return (
@@ -269,7 +290,11 @@ export function DocumentsTable({
                           Download
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteClick(doc)}
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -287,6 +312,16 @@ export function DocumentsTable({
           No documents found
         </div>
       )}
+
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete document"
+        description={`Are you sure you want to delete "${documentToDelete?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirm}
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -1,7 +1,21 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, ChevronDown, Folder as FolderIcon } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ChevronRight,
+  ChevronDown,
+  Folder as FolderIcon,
+  MoreVertical,
+  Trash2,
+} from "lucide-react";
 import { folderService, type Folder } from "../services/folder.service";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 interface FolderTreeProps {
   selectedFolderId: string | null;
@@ -22,6 +36,22 @@ function FolderNode({
   onFolderSelect,
 }: Readonly<FolderNodeProps>) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => folderService.deleteFolder(folder.publicId),
+    onSuccess: async () => {
+      // Force le refetch des dossiers racine
+      await queryClient.refetchQueries({ queryKey: ["root-folders"] });
+      // Force le refetch des enfants si le dossier était ouvert
+      await queryClient.refetchQueries({ queryKey: ["folder-children"] });
+    },
+    onError: (error: { response?: { data?: { message?: string } } } | null) => {
+      alert(error?.response?.data?.message || "Failed to delete folder");
+    },
+  });
 
   const { data: children, isLoading } = useQuery({
     queryKey: ["folder-children", folder.publicId],
@@ -78,7 +108,35 @@ function FolderNode({
           fill={isSelected ? "currentColor" : "none"}
         />
 
-        <span className="text-sm font-medium truncate">{folder.name}</span>
+        <div className="group flex items-center justify-between flex-1">
+          <span className="text-sm font-medium truncate">{folder.name}</span>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4 text-slate-400" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete folder
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {isExpanded && hasChildren && (
@@ -94,6 +152,19 @@ function FolderNode({
           ))}
         </div>
       )}
+
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete folder"
+        description={`Are you sure you want to delete "${folder.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => {
+          deleteMutation.mutate();
+          setDeleteDialogOpen(false);
+        }}
+        variant="destructive"
+      />
     </div>
   );
 }

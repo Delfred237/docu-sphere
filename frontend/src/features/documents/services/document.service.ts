@@ -92,4 +92,12 @@ export const documentService = {
     );
     return response.data;
   },
+
+  async deleteDocument(publicId: string): Promise<void> {
+    console.log("Deleting document:", publicId);
+    console.log("URL:", `/v1/documents/${publicId}`);
+    const response = await apiClient.delete(`/v1/documents/${publicId}`);
+    console.log('Response:', response);
+    return response.data;
+  },
 };

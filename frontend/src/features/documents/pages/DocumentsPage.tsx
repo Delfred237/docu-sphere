@@ -60,6 +60,19 @@ export function DocumentsPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (publicId: string) => documentService.deleteDocument(publicId),
+    onSuccess: async () => {
+      // Force le refetch de toutes les queries 'documents'
+      await queryClient.refetchQueries({ queryKey: ["documents"] });
+      // Met à jour aussi le dashboard
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: () => {
+      setError("Failed to delete document");
+    },
+  });
+
   const handleUpload = async (files: File[]) => {
     setError(null);
     setUploadingCount((count) => count + files.length);
@@ -90,6 +103,10 @@ export function DocumentsPage() {
 
   const handleReject = (doc: Document) => {
     rejectMutation.mutate(doc.publicId);
+  };
+
+  const handleDelete = (doc: Document) => {
+    deleteMutation.mutate(doc.publicId);
   };
 
   return (
@@ -153,6 +170,7 @@ export function DocumentsPage() {
           onSubmit={handleSubmit}
           onApprove={handleApprove}
           onReject={handleReject}
+          onDelete={handleDelete}
         />
       )}
 
