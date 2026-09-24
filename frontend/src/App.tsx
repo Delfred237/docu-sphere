@@ -9,6 +9,9 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 import { DocumentsPage } from "./features/documents/pages/DocumentsPage";
 import { FoldersPage } from "./features/folders/pages/FoldersPage";
+import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
+import { LandingPage } from "./features/landing/pages/LandingPage";
 
 function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -43,20 +46,60 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
+        {/* Landing page */}
+        <Route
+          path="/"
+          element={
+            !isAuthenticated ? (
+              <LandingPage />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          }
+        />
+
+        {/* Public auth routes */}
         <Route
           path="/login"
           element={
-            !isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />
+            !isAuthenticated ? (
+              <LoginPage />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
           }
         />
         <Route
           path="/register"
           element={
-            !isAuthenticated ? <RegisterPage /> : <Navigate to="/" replace />
+            !isAuthenticated ? (
+              <RegisterPage />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
           }
         />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route
+          path="/forgot-password"
+          element={
+            !isAuthenticated ? (
+              <ForgotPasswordPage />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            !isAuthenticated ? (
+              <ResetPasswordPage />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          }
+        />
 
         {/* Protected routes */}
         <Route
@@ -66,7 +109,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/folders" element={<FoldersPage />} />
         </Route>

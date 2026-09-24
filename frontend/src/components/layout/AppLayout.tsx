@@ -27,7 +27,7 @@ import { useAuthStore } from "@/features/auth/stores/authStore";
 import { Logo } from "@/components/shared/Logo";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Folders", href: "/folders", icon: FolderTree },
   { name: "Shared", href: "/shared", icon: Share2 },
