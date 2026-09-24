@@ -33,7 +33,7 @@ export function LoginPage() {
 
     try {
       await login(data.email, data.password);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       const apiError = error as { response?: { data?: ApiError } };
       const errorData = apiError.response?.data;

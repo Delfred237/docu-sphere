@@ -1,4 +1,4 @@
-import { Download, CheckCircle, XCircle, Send, Trash2 } from "lucide-react";
+import { Download, CheckCircle, XCircle, Send, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileIcon } from "./FileIcon";
@@ -15,6 +15,7 @@ interface DocumentCardProps {
   onApprove: (doc: Document) => void;
   onReject: (doc: Document) => void;
   onDelete: (doc: Document) => void;
+  onShare: (doc: Document) => void;
 }
 
 function formatSize(bytes: number): string {
@@ -32,6 +33,7 @@ export function DocumentCard({
   onApprove,
   onReject,
   onDelete,
+  onShare,
 }: Readonly<DocumentCardProps>) {
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
@@ -120,6 +122,16 @@ export function DocumentCard({
                   </Button>
                 </>
               )}
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onShare(doc)}
+                title="Share"
+              >
+                <Share2 className="h-4 w-4 text-slate-600" />
+              </Button>
 
               <Button
                 variant="ghost"

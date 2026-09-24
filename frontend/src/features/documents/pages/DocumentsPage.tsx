@@ -7,12 +7,14 @@ import { UploadDropzone } from "../components/UploadDropzone";
 import { DocumentsTable } from "../components/DocumentsTable";
 import { documentService, type Document } from "../services/document.service";
 import { Alert } from "@/components/shared/Alert";
+import { ShareDocumentDialog } from "@/features/sharing/components/ShareDocumentDialog";
 
 export function DocumentsPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [uploadingCount, setUploadingCount] = useState(0);
+  const [shareDocument, setShareDocument] = useState<Document | null>(null);
 
   // Fetch documents
   const { data, isLoading, refetch, isFetching } = useQuery({
@@ -127,6 +129,10 @@ export function DocumentsPage() {
     deleteMutation.mutate(doc.publicId);
   };
 
+  const handleShare = (doc: Document) => {
+    setShareDocument(doc);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -204,6 +210,7 @@ export function DocumentsPage() {
           onReject={handleReject}
           onRename={handleRename}
           onDelete={handleDelete}
+          onShare={handleShare}
         />
       )}
 
@@ -213,6 +220,13 @@ export function DocumentsPage() {
           Showing {data.content.length} of {data.totalElements} documents
         </div>
       )}
+
+      {/* Share Dialog */}
+      <ShareDocumentDialog
+        doc={shareDocument}
+        open={!!shareDocument}
+        onOpenChange={(open) => !open && setShareDocument(null)}
+      />
     </div>
   );
 }

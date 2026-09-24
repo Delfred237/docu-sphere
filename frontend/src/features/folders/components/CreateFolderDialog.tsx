@@ -67,7 +67,9 @@ export function CreateFolderDialog({
           </DialogHeader>
 
           <div className="py-4">
-            <Label htmlFor="folder-name">Folder name</Label>
+            <Label htmlFor="folder-name" className="mb-3">
+              Folder name
+            </Label>
             <Input
               id="folder-name"
               value={name}

@@ -13,12 +13,14 @@ import { folderService, type Folder } from "../services/folder.service";
 import { Alert } from "@/components/shared/Alert";
 import { Button } from "@/components/ui/button";
 import { FolderIcon, X } from "lucide-react";
+import { ShareDocumentDialog } from "@/features/sharing/components/ShareDocumentDialog";
 
 export function FoldersPage() {
   const queryClient = useQueryClient();
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [shareDocument, setShareDocument] = useState<Document | null>(null);
 
   // Fetch all folders for breadcrumb
   const { data: allFolders = [] } = useQuery({
@@ -42,6 +44,19 @@ export function FoldersPage() {
         rootOnly: !selectedFolder,
         size: 100,
       }),
+  });
+
+  const renameMutation = useMutation({
+    mutationFn: ({ publicId, name }: { publicId: string; name: string }) =>
+      documentService.renameDocument(publicId, name),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ["documents", selectedFolder?.publicId],
+      });
+    },
+    onError: () => {
+      setError("Failed to rename document");
+    },
   });
 
   // Delete document mutation
@@ -102,8 +117,16 @@ export function FoldersPage() {
     }
   };
 
+  const handleRename = async (doc: Document, newName: string) => {
+    await renameMutation.mutateAsync({ publicId: doc.publicId, name: newName });
+  };
+
   const handleDelete = (doc: Document) => {
     deleteMutation.mutate(doc.publicId);
+  };
+
+  const handleShare = (doc: Document) => {
+    setShareDocument(doc);
   };
 
   const handleUpload = async (files: File[]) => {
@@ -228,11 +251,20 @@ export function FoldersPage() {
               onSubmit={handleSubmit}
               onApprove={handleApprove}
               onReject={handleReject}
+              onRename={handleRename}
               onDelete={handleDelete}
+              onShare={handleShare}
             />
           )}
         </div>
       </main>
+
+      {/* Share Dialog */}
+      <ShareDocumentDialog
+        doc={shareDocument}
+        open={!!shareDocument}
+        onOpenChange={(open) => !open && setShareDocument(null)}
+      />
     </div>
   );
 }

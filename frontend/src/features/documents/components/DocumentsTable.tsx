@@ -9,6 +9,7 @@ import {
   XCircle,
   Trash2,
   Pencil,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,6 +29,7 @@ interface DocumentsTableProps {
   onReject: (doc: Document) => void;
   onRename: (doc: Document, newName: string) => Promise<void>;
   onDelete: (doc: Document) => void;
+  onShare: (doc: Document) => void;
 }
 
 type SortField = "name" | "size" | "createdAt" | null;
@@ -62,6 +64,7 @@ export function DocumentsTable({
   onReject,
   onRename,
   onDelete,
+  onShare,
 }: Readonly<DocumentsTableProps>) {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -279,6 +282,14 @@ export function DocumentsTable({
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => onShare(doc)}
+                        title="Share"
+                      >
+                        <Share2 className="h-4 w-4 text-slate-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleRenameClick(doc)}
                         title="Rename"
                       >
@@ -320,6 +331,7 @@ export function DocumentsTable({
             onApprove={onApprove}
             onReject={onReject}
             onDelete={handleDeleteClick}
+            onShare={onShare}
           />
         ))}
 
