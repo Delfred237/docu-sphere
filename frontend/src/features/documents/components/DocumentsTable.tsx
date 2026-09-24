@@ -8,6 +8,7 @@ import {
   Send,
   XCircle,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +18,7 @@ import { DocumentCard } from "./DocumentCard";
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Document } from "../services/document.service";
+import { RenameDialog } from "@/components/shared/RenameDialog";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -24,6 +26,7 @@ interface DocumentsTableProps {
   onSubmit: (doc: Document) => void;
   onApprove: (doc: Document) => void;
   onReject: (doc: Document) => void;
+  onRename: (doc: Document, newName: string) => Promise<void>;
   onDelete: (doc: Document) => void;
 }
 
@@ -57,6 +60,7 @@ export function DocumentsTable({
   onSubmit,
   onApprove,
   onReject,
+  onRename,
   onDelete,
 }: Readonly<DocumentsTableProps>) {
   const [sortField, setSortField] = useState<SortField>("createdAt");
@@ -64,6 +68,10 @@ export function DocumentsTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
+    null,
+  );
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [documentToRename, setDocumentToRename] = useState<Document | null>(
     null,
   );
 
@@ -74,6 +82,11 @@ export function DocumentsTable({
       setSortField(field);
       setSortDirection("asc");
     }
+  };
+
+  const handleRenameClick = (doc: Document) => {
+    setDocumentToRename(doc);
+    setRenameDialogOpen(true);
   };
 
   const sortedDocuments = useMemo(() => {
@@ -263,7 +276,14 @@ export function DocumentsTable({
                           </Button>
                         </>
                       )}
-
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRenameClick(doc)}
+                        title="Rename"
+                      >
+                        <Pencil className="h-4 w-4 text-slate-600" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -309,6 +329,20 @@ export function DocumentsTable({
           </div>
         )}
       </div>
+
+      {/* Rename confirmation dialog */}
+      <RenameDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        currentName={documentToRename?.name || ""}
+        onRename={async (newName) => {
+          if (documentToRename) {
+            await onRename(documentToRename, newName);
+          }
+        }}
+        title="Rename document"
+        description="Enter a new name for this document"
+      />
 
       {/* Delete confirmation dialog */}
       <ConfirmationDialog

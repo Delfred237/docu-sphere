@@ -6,16 +6,19 @@ import {
   Folder as FolderIcon,
   MoreVertical,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { folderService, type Folder } from "../services/folder.service";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
+import { RenameDialog } from "@/components/shared/RenameDialog";
 
 interface FolderTreeProps {
   selectedFolderId: string | null;
@@ -37,8 +40,20 @@ function FolderNode({
 }: Readonly<FolderNodeProps>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Ajoute cette mutation :
+  const renameMutation = useMutation({
+    mutationFn: (newName: string) =>
+      folderService.renameFolder(folder.publicId, newName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["root-folders"] });
+      queryClient.invalidateQueries({ queryKey: ["folder-children"] });
+      queryClient.invalidateQueries({ queryKey: ["all-folders"] });
+    },
+  });
 
   const deleteMutation = useMutation({
     mutationFn: () => folderService.deleteFolder(folder.publicId),
@@ -127,6 +142,18 @@ function FolderNode({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
+                  setMenuOpen(false);
+                  setRenameDialogOpen(true);
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen(false);
                   setDeleteDialogOpen(true);
                 }}
                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -153,6 +180,16 @@ function FolderNode({
         </div>
       )}
 
+      <RenameDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        currentName={folder.name}
+        onRename={async (newName) => {
+          await renameMutation.mutateAsync(newName);
+        }}
+        title="Rename folder"
+        description="Enter a new name for this folder"
+      />
       <ConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

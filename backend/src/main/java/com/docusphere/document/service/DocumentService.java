@@ -340,6 +340,35 @@ public class DocumentService {
     }
 
     @Transactional
+    public DocumentResponse renameDocument(String publicId, String newName, User currentUser) {
+        Document document = documentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document", "publicId", publicId));
+
+        // Vérifier que l'utilisateur est le propriétaire
+        if (!document.getOwner().getId().equals(currentUser.getId())) {
+            throw new ForbiddenException("You cannot rename a document you don't own");
+        }
+
+        document.setName(newName.trim());
+        document.setUpdatedAt(Instant.now());
+        Document saved = documentRepository.save(document);
+
+        // Publier un événement d'audit
+        eventPublisher.publishEvent(new AuditEvent(
+                this,
+                "DOCUMENT_RENAMED",
+                currentUser.getId(),
+                currentUser.getEmail(),
+                "DOCUMENT",
+                saved.getPublicId(),
+                getClientIp(),
+                Map.of("name", saved.getName())
+        ));
+
+        return DocumentResponse.fromEntity(saved);
+    }
+
+    @Transactional
     public void deleteDocument(String publicId, User currentUser) {
         Document document = documentRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document", "publicId", publicId));

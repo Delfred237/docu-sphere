@@ -3,6 +3,7 @@ package com.docusphere.folder.controller;
 import com.docusphere.auth.domain.User;
 import com.docusphere.folder.dto.CreateFolderRequest;
 import com.docusphere.folder.dto.FolderResponse;
+import com.docusphere.folder.dto.UpdateFolderRequest;
 import com.docusphere.folder.service.FolderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,14 @@ public class FolderController {
             @AuthenticationPrincipal User user,
             @PathVariable String publicId) {
         return ResponseEntity.ok(folderService.getSubFolders(user, publicId));
+    }
+
+    @PatchMapping("/{publicId}/rename")
+    public ResponseEntity<FolderResponse> renameFolder(
+            @AuthenticationPrincipal User user,
+            @PathVariable String publicId,
+            @Valid @RequestBody UpdateFolderRequest request) {
+        return ResponseEntity.ok(folderService.renameFolder(publicId, request.name(), user));
     }
 
     @DeleteMapping("/{publicId}")

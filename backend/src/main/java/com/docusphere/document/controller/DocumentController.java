@@ -5,6 +5,7 @@ import com.docusphere.document.domain.Document;
 import com.docusphere.document.domain.DocumentStatus;
 import com.docusphere.document.dto.DocumentResponse;
 import com.docusphere.document.dto.DocumentValidationRequest;
+import com.docusphere.document.dto.UpdateDocumentRequest;
 import com.docusphere.document.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -116,6 +117,14 @@ public class DocumentController {
                 .contentType(MediaType.parseMediaType(document.getMimeType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFilename() + "\"")
                 .body(new InputStreamResource(inputStream));
+    }
+
+    @PatchMapping("/{publicId}/rename")
+    public ResponseEntity<DocumentResponse> renameDocument(
+            @AuthenticationPrincipal User user,
+            @PathVariable String publicId,
+            @Valid @RequestBody UpdateDocumentRequest request) {
+        return ResponseEntity.ok(documentService.renameDocument(publicId, request.name(), user));
     }
 
     @DeleteMapping("/{publicId}")

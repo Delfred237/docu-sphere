@@ -63,6 +63,17 @@ export function DocumentsPage() {
     },
   });
 
+  const renameMutation = useMutation({
+    mutationFn: ({ publicId, name }: { publicId: string; name: string }) =>
+      documentService.renameDocument(publicId, name),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["documents"] });
+    },
+    onError: () => {
+      setError("Failed to rename document");
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (publicId: string) => documentService.deleteDocument(publicId),
     onSuccess: async () => {
@@ -106,6 +117,10 @@ export function DocumentsPage() {
 
   const handleReject = (doc: Document) => {
     rejectMutation.mutate(doc.publicId);
+  };
+
+  const handleRename = async (doc: Document, newName: string) => {
+    await renameMutation.mutateAsync({ publicId: doc.publicId, name: newName });
   };
 
   const handleDelete = (doc: Document) => {
@@ -187,6 +202,7 @@ export function DocumentsPage() {
           onSubmit={handleSubmit}
           onApprove={handleApprove}
           onReject={handleReject}
+          onRename={handleRename}
           onDelete={handleDelete}
         />
       )}

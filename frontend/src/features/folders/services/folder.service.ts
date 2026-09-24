@@ -31,11 +31,19 @@ export const folderService = {
     return response.data;
   },
 
+  async renameFolder(publicId: string, name: string): Promise<Folder> {
+    const response = await apiClient.patch<Folder>(
+      `/v1/folders/${publicId}/rename`,
+      { name },
+    );
+    return response.data;
+  },
+
   async deleteFolder(publicId: string): Promise<void> {
     console.log("Deleting folder:", publicId);
     console.log("URL:", `/v1/folders/${publicId}`);
     const response = await apiClient.delete(`/v1/folders/${publicId}`);
-    console.log('Response:', response);
+    console.log("Response:", response);
     return response.data;
   },
 };
