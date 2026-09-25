@@ -11,50 +11,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/v1/documents")
+@RequestMapping("/v1/share-links")
 @RequiredArgsConstructor
 public class ShareLinkController {
 
     private final ShareLinkService shareLinkService;
-    private final QrCodeService qrCodeService;
 
-    public record CreateShareLinkRequest(
-            boolean allowDownload,
-            long expirationDays // Ex: 7 jours
-    ) {}
 
-    @PostMapping("/{documentPublicId}/share")
-    public ResponseEntity<ShareLinkResponse> createShareLink(
-            @AuthenticationPrincipal User user,
-            @PathVariable String documentPublicId,
-            @Valid @RequestBody CreateShareLinkRequest request) {
-
-        ShareLinkResponse response = shareLinkService.createShareLink(
-                documentPublicId, user, request.allowDownload(), request.expirationDays()
-        );
-        return ResponseEntity.ok(response);
+    @GetMapping
+    public ResponseEntity<List<ShareLinkResponse>> getUserShareLinks(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(shareLinkService.getUserShareLinks(user));
     }
 
-    @GetMapping("/share/{linkPublicId}/qrcode")
-    public ResponseEntity<byte[]> getShareLinkQrCode(
+    @DeleteMapping("/{publicId}")
+    public ResponseEntity<Void> revokeShareLink(
             @AuthenticationPrincipal User user,
-            @PathVariable String linkPublicId) {
-
-        // Récupérer le lien pour construire l'URL
-        // Pour simplifier, on suppose que l'utilisateur a le droit de voir le QR code
-        // Dans une vraie app, on vérifierait les droits
-
-        String baseUrl = "http://localhost:5173/share/"; // URL du frontend
-        String content = baseUrl + linkPublicId;
-
-        try {
-            byte[] qrCodeImage = qrCodeService.generateQrCode(content, 300, 300);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_PNG)
-                    .body(qrCodeImage);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+            @PathVariable String publicId) {
+        shareLinkService.revokeShareLinkByPublicId(publicId, user);
+        return ResponseEntity.noContent().build();
     }
 }

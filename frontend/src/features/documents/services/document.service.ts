@@ -43,6 +43,11 @@ export const documentService = {
     return response.data;
   },
 
+  async getDocument(publicId: string): Promise<Document> {
+    const response = await apiClient.get<Document>(`/v1/documents/${publicId}`);
+    return response.data;
+  },
+
   async uploadDocument(file: File, folderId?: string): Promise<Document> {
     const formData = new FormData();
     formData.append("file", file);

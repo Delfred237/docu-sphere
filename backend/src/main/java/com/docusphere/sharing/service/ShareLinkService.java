@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,29 @@ public class ShareLinkService {
 
         ShareLink savedLink = shareLinkRepository.save(shareLink);
         return ShareLinkResponse.fromEntity(savedLink);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShareLinkResponse> getUserShareLinks(User user) {
+        List<ShareLink> links = shareLinkRepository.findAllByCreatedByUserIdAndDeletedFalseOrderByCreatedAtDesc(user.getId());
+        return links.stream()
+                .map(ShareLinkResponse::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public void revokeShareLinkByPublicId(String publicId, User user) {
+        ShareLink link = shareLinkRepository.findByPublicIdAndDeletedFalse(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Share link", "publicId", publicId));
+
+        // Vérifier que l'utilisateur est le créateur
+        if (!link.getCreatedByUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("You cannot revoke a share link you didn't create");
+        }
+
+        link.setDeleted(true);
+        link.setDeletedAt(Instant.now());
+        shareLinkRepository.save(link);
     }
 
     @Transactional(readOnly = true)

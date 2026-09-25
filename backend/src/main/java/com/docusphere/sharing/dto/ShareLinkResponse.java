@@ -10,22 +10,24 @@ public record ShareLinkResponse(
         String documentPublicId,
         String documentName,
         String documentMimeType,
-        Instant expiresAt,
+        Long documentSize,
         boolean allowDownload,
         int downloadCount,
+        Instant expiresAt,
         Instant createdAt
 ) {
-    public static ShareLinkResponse fromEntity(ShareLink shareLink) {
+    public static ShareLinkResponse fromEntity(ShareLink link) {
         return new ShareLinkResponse(
-                shareLink.getPublicId(),
-                shareLink.getToken(),
-                shareLink.getDocument().getPublicId(),
-                shareLink.getDocument().getName(),
-                shareLink.getDocument().getMimeType(),
-                shareLink.getExpiresAt(),
-                shareLink.isAllowDownload(),
-                shareLink.getDownloadCount(),
-                shareLink.getCreatedAt()
+                link.getPublicId(),
+                link.getToken(),
+                link.getDocument().getPublicId(),
+                link.getDocument().getName(),
+                link.getDocument().getMimeType(),
+                link.getDocument().getSize(),
+                link.isAllowDownload(),
+                link.getDownloadCount(),
+                link.getExpiresAt(),
+                link.getCreatedAt()
         );
     }
 }
