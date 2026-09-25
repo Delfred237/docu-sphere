@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Share2, Link2, Plus } from "lucide-react";
+import { Share2, Link2, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShareLinkCard } from "../components/ShareLinkCard";
 import { QrCodeDialog } from "../components/QrCodeDialog";
@@ -20,6 +20,7 @@ export function SharedPage() {
   const {
     data: links = [],
     isLoading,
+    isFetching,
     refetch,
   } = useQuery({
     queryKey: ["share-links"],
@@ -64,11 +65,11 @@ export function SharedPage() {
         <Button
           variant="outline"
           onClick={() => refetch()}
-          disabled={isLoading}
+          disabled={isFetching} // ← Changé de isLoading à isFetching
           className="self-start sm:self-auto"
         >
           <Loader2
-            className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
           />
           Refresh
         </Button>

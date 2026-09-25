@@ -239,14 +239,16 @@ export function DocumentsTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDownload(doc)}
-                        title="Download"
-                      >
-                        <Download className="h-4 w-4 text-slate-600" />
-                      </Button>
+                      {doc.hasFile !== false && doc.size > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDownload(doc)}
+                          title="Download"
+                        >
+                          <Download className="h-4 w-4 text-slate-600" />
+                        </Button>
+                      )}
 
                       {doc.status === "DRAFT" && (
                         <Button

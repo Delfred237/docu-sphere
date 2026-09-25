@@ -9,6 +9,7 @@ export interface Document {
   status: "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
   createdAt: string;
   updatedAt: string;
+  hasFile?: boolean;
   folderPublicId?: string;
   folderName?: string;
 }

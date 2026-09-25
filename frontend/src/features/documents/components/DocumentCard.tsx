@@ -1,4 +1,11 @@
-import { Download, CheckCircle, XCircle, Send, Trash2, Share2 } from "lucide-react";
+import {
+  Download,
+  CheckCircle,
+  XCircle,
+  Send,
+  Trash2,
+  Share2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileIcon } from "./FileIcon";
@@ -78,15 +85,16 @@ export function DocumentCard({
           <div className="flex items-center justify-between mt-3">
             <StatusBadge status={doc.status} />
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onDownload(doc)}
-                title="Download"
-              >
-                <Download className="h-4 w-4 text-slate-600" />
-              </Button>
+              {doc.hasFile !== false && doc.size > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDownload(doc)}
+                  title="Download"
+                >
+                  <Download className="h-4 w-4 text-slate-600" />
+                </Button>
+              )}
 
               {doc.status === "DRAFT" && (
                 <Button
