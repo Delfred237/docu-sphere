@@ -322,20 +322,27 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public Document getDocumentEntity(String publicId, User user) {
+    public DocumentResponse getDocument(String publicId, User user) {
         Document document = documentRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document", "publicId", publicId));
 
         // Sécurité IDOR
         if (!document.getOwner().getId().equals(user.getId())) {
-            // Ici on pourrait lancer une ForbiddenException, mais pour le download, on veut juste bloquer.
-            throw new RuntimeException("Access denied");
+            throw new ForbiddenException("You cannot view a document you don't own");
         }
-        return document;
+
+        return DocumentResponse.fromEntity(document);
     }
 
     public InputStream downloadDocument(String publicId, User user) {
-        Document document = getDocumentEntity(publicId, user);
+        Document document = documentRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document", "publicId", publicId));
+
+        // Sécurité IDOR
+        if (!document.getOwner().getId().equals(user.getId())) {
+            throw new ForbiddenException("You cannot view a document you don't own");
+        }
+
         return storageService.load(document.getStoredFilename());
     }
 

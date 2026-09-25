@@ -13,6 +13,7 @@ import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 import { LandingPage } from "./features/landing/pages/LandingPage";
 import { SharedPage } from "./features/sharing/pages/SharedPage";
+import { DocumentDetailPage } from "./features/documents/pages/DocumentDetailPage";
 
 function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -112,6 +113,7 @@ function App() {
         >
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/documents/:publicId" element={<DocumentDetailPage />} />
           <Route path="/folders" element={<FoldersPage />} />
           <Route path="/shared" element={<SharedPage />} />
         </Route>

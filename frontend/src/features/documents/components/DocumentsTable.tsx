@@ -20,6 +20,7 @@ import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Document } from "../services/document.service";
 import { RenameDialog } from "@/components/shared/RenameDialog";
+import { Link } from "react-router-dom";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -217,9 +218,12 @@ export function DocumentsTable({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <FileIcon mimeType={doc.mimeType} />
-                      <span className="font-medium text-slate-900 truncate max-w-[200px]">
+                      <Link
+                        to={`/documents/${doc.publicId}`}
+                        className="font-medium text-slate-900 hover:text-primary-600 transition-colors truncate max-w-50"
+                      >
                         {doc.name}
-                      </span>
+                      </Link>
                     </div>
                   </td>
                   <td className="px-4 py-3">

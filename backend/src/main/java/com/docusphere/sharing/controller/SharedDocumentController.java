@@ -55,7 +55,7 @@ public class SharedDocumentController {
         // Pour simplifier, on suppose que l'utilisateur a le droit de voir le QR code
         // Dans une vraie app, on vérifierait les droits
 
-        String baseUrl = "http://localhost:5173/share/"; // URL du frontend
+        String baseUrl = "http://localhost:5173/share/api/v1/shared"; // URL du frontend
         String content = baseUrl + linkPublicId;
 
         try {

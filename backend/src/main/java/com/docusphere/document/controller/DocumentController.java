@@ -18,14 +18,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/v1/documents")
@@ -110,12 +109,12 @@ public class DocumentController {
             @AuthenticationPrincipal User user,
             @PathVariable String publicId) {
 
-        Document document = documentService.getDocumentEntity(publicId, user);
+        DocumentResponse document = documentService.getDocument(publicId, user);
         var inputStream = documentService.downloadDocument(publicId, user);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(document.getMimeType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFilename() + "\"")
+                .contentType(MediaType.parseMediaType(document.mimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.originalFilename() + "\"")
                 .body(new InputStreamResource(inputStream));
     }
 
@@ -125,6 +124,14 @@ public class DocumentController {
             @PathVariable String publicId,
             @Valid @RequestBody UpdateDocumentRequest request) {
         return ResponseEntity.ok(documentService.renameDocument(publicId, request.name(), user));
+    }
+
+    @GetMapping("/{publicId}")
+    public ResponseEntity<DocumentResponse> getDocument(
+            @AuthenticationPrincipal User user,
+            @PathVariable String publicId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(documentService.getDocument(publicId, user));
     }
 
     @DeleteMapping("/{publicId}")
