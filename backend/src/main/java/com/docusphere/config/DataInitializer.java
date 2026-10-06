@@ -65,17 +65,18 @@ public class DataInitializer implements ApplicationRunner {
 
         // 3. Create Default Admin User (NOUVEAU)
         createDefaultAdminUser();
+        createDefaultManagerUser();
     }
 
     private void createDefaultManagerUser() {
-        if (userRepository.existsByEmailIgnoreCase(adminProperties.getEmail())) {
+        if (userRepository.existsByEmailIgnoreCase(managerProperties.getEmail())) {
             log.debug("Default manager user already exists. Skipping creation.");
             return;
         }
 
         log.warn("⚠️ Creating default manager user. This should NOT happen in production without secure credentials!");
 
-        Role adminRole = roleRepository.findByName(RoleName.MANAGER)
+        Role managerRole = roleRepository.findByName(RoleName.MANAGER)
                 .orElseThrow(() -> new IllegalStateException("MANAGER role not found during initialization."));
 
         User manager = new User();
@@ -85,7 +86,7 @@ public class DataInitializer implements ApplicationRunner {
         manager.setLastName(managerProperties.getLastName());
         manager.setEmailVerified(true); // Crucial : l'admin doit pouvoir se connecter immédiatement
         manager.setActive(true);
-        manager.addRole(adminRole);
+        manager.addRole(managerRole);
 
         userRepository.save(manager);
         log.info("✅ Default manager user created: {}", managerProperties.getEmail());
