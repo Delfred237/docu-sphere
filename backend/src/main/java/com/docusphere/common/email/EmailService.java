@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,9 +30,6 @@ public class EmailService {
 
     @Async
     public void sendVerificationCode(String toEmail, String firstName, String code) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             // Préparation du contexte Thymeleaf
             Context context = new Context();
@@ -40,45 +40,73 @@ public class EmailService {
             // Génération du HTML
             String htmlContent = templateEngine.process("emails/verification-code", context);
 
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("Your DocuSphere Verification Code");
-            helper.setText(htmlContent, true); // true = HTML
-
-            mailSender.send(message);
+            sendHtmlEmail(toEmail, "Verify your DocuSphere account", htmlContent);
             businessMetrics.incrementEmailsSent();
             log.info("Verification code sent to {}", toEmail);
 
-        } catch (MessagingException e) {
-            log.error("Failed to send verification email to {}", toEmail, e);
-            businessMetrics.incrementEmailsFailed();
-        }
+
+    }
+
+    public void sendPasswordResetEmail(String to, String firstName, String code) {
+        Context context = new Context();
+        context.setVariables(Map.of(
+                "firstName", firstName,
+                "code", code
+        ));
+
+        String html = templateEngine.process("emails/password-reset", context);
+        sendHtmlEmail(to, "Reset your DocuSphere password", html);
     }
 
     @Async
     public void sendNotificationEmail(String toEmail, String title, String message, String actionUrl) {
+    // Déterminer le template selon le titre ou le contenu
+        String templateName = determineTemplate(title, message);
+
+        Context context = new Context();
+        context.setVariables(Map.of(
+                "title", title,
+                "message", message,
+                "actionUrl", actionUrl != null ? actionUrl : ""
+        ));
+
+        String html = templateEngine.process(templateName, context);
+        sendHtmlEmail(toEmail, title, html);
+    }
+
+    /**
+     * Détermine quel template utiliser selon le contenu de la notification
+     */
+    private String determineTemplate(String title, String message) {
+        if (title != null) {
+            if (title.contains("Approved")) return "emails/document-approved";
+            if (title.contains("Rejected")) return "emails/document-rejected";
+            if (title.contains("Submitted")) return "emails/document-submitted";
+        }
+
+        if (message != null) {
+            if (message.contains("approved")) return "emails/document-approved";
+            if (message.contains("rejected")) return "emails/document-rejected";
+            if (message.contains("submitted")) return "emails/document-submitted";
+        }
+
+        return "emails/notification-generic"; // Template par défaut
+    }
+
+    private void sendHtmlEmail(String to, String subject, String html) {
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-
-            Context context = new Context();
-            context.setVariable("title", title);
-            context.setVariable("message", message);
-            context.setVariable("actionUrl", actionUrl);
-
-            String htmlContent = templateEngine.process("emails/notification", context);
-
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("[DocuSphere] " + title);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(mimeMessage);
-            businessMetrics.incrementEmailsSent();
-            log.info("Notification email sent to {}", toEmail);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(html, true);
+            helper.setFrom("noreply@docusphere.com", "DocuSphere");
+            mailSender.send(message);
+            log.info("Email sent to {} with subject: {}", to, subject);
         } catch (MessagingException e) {
-            log.error("Failed to send notification email to {}", toEmail, e);
-            businessMetrics.incrementEmailsFailed();
+            log.error("Failed to send email to {}", to, e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

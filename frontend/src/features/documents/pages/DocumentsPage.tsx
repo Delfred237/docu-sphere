@@ -27,8 +27,8 @@ export function DocumentsPage() {
   // Upload mutation
   const uploadMutation = useMutation({
     mutationFn: (file: File) => documentService.uploadDocument(file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
     onError: () => {
       setError("Failed to upload file");
@@ -41,27 +41,27 @@ export function DocumentsPage() {
   // Submit for review mutation
   const submitMutation = useMutation({
     mutationFn: (publicId: string) => documentService.submitForReview(publicId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
   // Approve mutation
   const approveMutation = useMutation({
     mutationFn: (publicId: string) => documentService.approveDocument(publicId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
   // Reject mutation
   const rejectMutation = useMutation({
     mutationFn: (publicId: string) => documentService.rejectDocument(publicId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
@@ -89,12 +89,12 @@ export function DocumentsPage() {
     },
   });
 
-  const handleUpload = async (files: File[]) => {
+  const handleUpload = (files: File[]) => {
     setError(null);
     setUploadingCount((count) => count + files.length);
 
     for (const file of files) {
-      await uploadMutation.mutateAsync(file).catch(() => {});
+      uploadMutation.mutateAsync(file).catch(() => {});
     }
   };
 
@@ -164,7 +164,7 @@ export function DocumentsPage() {
           <Alert variant="error" message={error} />
           <button
             onClick={() => setError(null)}
-            className="text-sm text-slate-400 hover:text-slate-600 flex-shrink-0"
+            className="text-sm text-slate-400 hover:text-slate-600 shrink-0"
           >
             ✕
           </button>

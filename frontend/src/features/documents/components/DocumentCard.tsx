@@ -46,7 +46,7 @@ export function DocumentCard({
     <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-start gap-3">
         {/* Checkbox */}
-        <div className="flex-shrink-0 mt-1">
+        <div className="shrink-0 mt-1">
           <Checkbox
             checked={isSelected}
             onCheckedChange={() => onSelect(doc.publicId)}
@@ -59,7 +59,7 @@ export function DocumentCard({
           <div className="flex items-start gap-3">
             <FileIcon
               mimeType={doc.mimeType}
-              className="h-6 w-6 flex-shrink-0"
+              className="h-6 w-6 shrink-0"
             />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-slate-900 truncate">{doc.name}</p>

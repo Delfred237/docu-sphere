@@ -6,6 +6,8 @@ import com.docusphere.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -18,7 +20,14 @@ public class NotificationEventListener {
     private final EmailService emailService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleNotificationEvent(NotificationEvent event) {
+        log.info("📨 Processing notification event: type={}, recipientId={}, recipientEmail={}, sendEmail={}",
+                event.getType(),
+                event.getRecipientId(),
+                event.getRecipientEmail(),
+                event.isSendEmail());
+
         try {
             // 1. Créer la notification in-app
             notificationService.createNotification(

@@ -95,7 +95,7 @@ public class DocumentService {
                 "Document Submitted",
                 "Your document \"" + document.getName() + "\" has been submitted for review.",
                 "/documents/" + document.getPublicId(),
-                false
+                true
         ));
 
         return DocumentResponse.fromEntity(saved);

@@ -28,10 +28,10 @@ export function CreateFolderDialog({
 
   const createMutation = useMutation({
     mutationFn: () => folderService.createFolder({ name, parentId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["root-folders"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["root-folders"] });
       if (parentId) {
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: ["folder-children", parentId],
         });
       }

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+
+    <title>Document approved — DocuSphere</title>
+</head>
+
+<body style="
+    margin: 0;
+    padding: 0;
+    background-color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+">
+
+<!-- Email wrapper -->
+<table
+        role="presentation"
+        width="100%"
+        cellspacing="0"
+        cellpadding="0"
+        border="0"
+        style="
+        width: 100%;
+        background-color: #f8fafc;
+        padding: 48px 16px;
+    "
+>
+    <tr>
+        <td align="center">
+
+            <!-- Main container -->
+            <table
+                    role="presentation"
+                    width="100%"
+                    cellspacing="0"
+                    cellpadding="0"
+                    border="0"
+                    style="
+                    width: 100%;
+                    max-width: 560px;
+                    background-color: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    overflow: hidden;
+                "
+            >
+
+                <!-- Brand header -->
+                <tr>
+                    <td
+                            style="
+                            padding: 24px 32px;
+                            border-bottom: 1px solid #e2e8f0;
+                            background-color: #ffffff;
+                        "
+                    >
+                        <table
+                                role="presentation"
+                                cellspacing="0"
+                                cellpadding="0"
+                                border="0"
+                        >
+                            <tr>
+
+                                <!-- Logo mark -->
+                                <td
+                                        style="
+                                        width: 34px;
+                                        height: 34px;
+                                        padding-right: 10px;
+                                        vertical-align: middle;
+                                    "
+                                >
+                                    <div style="
+                                        width: 34px;
+                                        height: 34px;
+                                        background-color: #2563eb;
+                                        border-radius: 8px;
+                                        color: #ffffff;
+                                        font-size: 17px;
+                                        font-weight: 700;
+                                        line-height: 34px;
+                                        text-align: center;
+                                    ">
+                                        D
+                                    </div>
+                                </td>
+
+                                <!-- Brand -->
+                                <td
+                                        style="
+                                        vertical-align: middle;
+                                        color: #0f172a;
+                                        font-size: 18px;
+                                        line-height: 24px;
+                                        font-weight: 700;
+                                    "
+                                >
+                                    DocuSphere
+                                </td>
+
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Main content -->
+                <tr>
+                    <td style="padding: 40px 32px 36px;">
+
+                        <!-- Success indicator -->
+                        <table
+                                role="presentation"
+                                cellspacing="0"
+                                cellpadding="0"
+                                border="0"
+                                style="margin-bottom: 20px;"
+                        >
+                            <tr>
+                                <td
+                                        align="center"
+                                        valign="middle"
+                                        style="
+                                        width: 40px;
+                                        height: 40px;
+                                        background-color: #dcfce7;
+                                        border-radius: 50%;
+                                        color: #15803d;
+                                        font-size: 20px;
+                                        font-weight: 700;
+                                    "
+                                >
+                                    ✓
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Heading -->
+                        <h1 style="
+                            margin: 0 0 12px;
+                            color: #0f172a;
+                            font-size: 24px;
+                            line-height: 32px;
+                            font-weight: 700;
+                        ">
+                            Your document has been approved
+                        </h1>
+
+                        <!-- Greeting -->
+                        <p style="
+                            margin: 0 0 16px;
+                            color: #475569;
+                            font-size: 15px;
+                            line-height: 24px;
+                        ">
+                            Hi
+                            <strong
+                                    th:text="${firstName}"
+                                    style="color: #334155;"
+                            >
+                                there
+                            </strong>,
+                        </p>
+
+                        <!-- Message -->
+                        <p style="
+                            margin: 0 0 28px;
+                            color: #475569;
+                            font-size: 15px;
+                            line-height: 24px;
+                        ">
+                            Your document
+                            <strong
+                                    th:text="${documentName}"
+                                    style="color: #334155;"
+                            >
+                                document.pdf
+                            </strong>
+                            has been approved by
+                            <strong
+                                    th:text="${validatorName}"
+                                    style="color: #334155;"
+                            >
+                                a reviewer
+                            </strong>.
+                        </p>
+
+                        <!-- Approval details -->
+                        <table
+                                role="presentation"
+                                width="100%"
+                                cellspacing="0"
+                                cellpadding="0"
+                                border="0"
+                                style="
+                                margin: 0 0 28px;
+                                background-color: #f0fdf4;
+                                border: 1px solid #bbf7d0;
+                                border-radius: 10px;
+                            "
+                        >
+                            <tr>
+                                <td style="padding: 20px;">
+
+                                    <!-- Status label -->
+                                    <p style="
+                                        margin: 0 0 8px;
+                                        color: #166534;
+                                        font-size: 11px;
+                                        line-height: 16px;
+                                        font-weight: 700;
+                                        letter-spacing: 0.06em;
+                                        text-transform: uppercase;
+                                    ">
+                                        Document status
+                                    </p>
+
+                                    <!-- Status badge -->
+                                    <span style="
+                                        display: inline-block;
+                                        padding: 5px 10px;
+                                        background-color: #dcfce7;
+                                        color: #166534;
+                                        border-radius: 6px;
+                                        font-size: 13px;
+                                        line-height: 18px;
+                                        font-weight: 600;
+                                    ">
+                                        Approved
+                                    </span>
+
+                                    <!-- Optional comment -->
+                                    <div
+                                            th:if="${comment != null and !comment.isEmpty()}"
+                                            style="margin-top: 20px;"
+                                    >
+                                        <p style="
+                                            margin: 0 0 6px;
+                                            color: #166534;
+                                            font-size: 11px;
+                                            line-height: 16px;
+                                            font-weight: 700;
+                                            letter-spacing: 0.06em;
+                                            text-transform: uppercase;
+                                        ">
+                                            Reviewer comment
+                                        </p>
+
+                                        <p
+                                                th:text="${comment}"
+                                                style="
+                                                margin: 0;
+                                                color: #14532d;
+                                                font-size: 14px;
+                                                line-height: 21px;
+                                            "
+                                        >
+                                            Great work!
+                                        </p>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- CTA -->
+                        <table
+                                role="presentation"
+                                width="100%"
+                                cellspacing="0"
+                                cellpadding="0"
+                                border="0"
+                        >
+                            <tr>
+                                <td align="left">
+
+                                    <a
+                                            th:href="${actionUrl}"
+                                            style="
+                                            display: inline-block;
+                                            padding: 12px 22px;
+                                            background-color: #2563eb;
+                                            color: #ffffff;
+                                            text-decoration: none;
+                                            border-radius: 8px;
+                                            font-size: 14px;
+                                            line-height: 20px;
+                                            font-weight: 600;
+                                        "
+                                    >
+                                        View document
+                                    </a>
+
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td
+                            style="
+                            padding: 24px 32px;
+                            background-color: #f8fafc;
+                            border-top: 1px solid #e2e8f0;
+                        "
+                    >
+
+                        <p style="
+                            margin: 0 0 6px;
+                            color: #64748b;
+                            font-size: 12px;
+                            line-height: 18px;
+                            text-align: center;
+                        ">
+                            This email was sent by DocuSphere.
+                        </p>
+
+                        <p style="
+                            margin: 0;
+                            color: #94a3b8;
+                            font-size: 11px;
+                            line-height: 17px;
+                            text-align: center;
+                        ">
+                            Secure document management, simplified.
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+            <!-- Copyright -->
+            <p style="
+                margin: 20px 0 0;
+                color: #94a3b8;
+                font-size: 11px;
+                line-height: 17px;
+                text-align: center;
+            ">
+                &copy; 2026 DocuSphere. All rights reserved.
+            </p>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

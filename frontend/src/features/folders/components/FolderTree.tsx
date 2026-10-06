@@ -48,10 +48,10 @@ function FolderNode({
   const renameMutation = useMutation({
     mutationFn: (newName: string) =>
       folderService.renameFolder(folder.publicId, newName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["root-folders"] });
-      queryClient.invalidateQueries({ queryKey: ["folder-children"] });
-      queryClient.invalidateQueries({ queryKey: ["all-folders"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["root-folders"] });
+      await queryClient.invalidateQueries({ queryKey: ["folder-children"] });
+      await queryClient.invalidateQueries({ queryKey: ["all-folders"] });
     },
   });
 

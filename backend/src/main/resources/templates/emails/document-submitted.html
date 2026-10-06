@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>Document submitted for review</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
+
+<table role="presentation"
+       width="100%"
+       cellspacing="0"
+       cellpadding="0"
+       border="0"
+       style="background-color: #f8fafc;">
+
+    <tr>
+        <td align="center" style="padding: 40px 20px;">
+
+            <!-- Main container -->
+            <table role="presentation"
+                   width="560"
+                   cellspacing="0"
+                   cellpadding="0"
+                   border="0"
+                   style="max-width: 560px; width: 100%;">
+
+                <!-- Brand -->
+                <tr>
+                    <td align="center" style="padding: 0 0 24px;">
+
+                        <table role="presentation"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0">
+
+                            <tr>
+                                <td style="vertical-align: middle;">
+
+                                    <!-- Logo mark -->
+                                    <table role="presentation"
+                                           cellspacing="0"
+                                           cellpadding="0"
+                                           border="0"
+                                           style="display: inline-block; vertical-align: middle;">
+
+                                        <tr>
+                                            <td align="center"
+                                                width="32"
+                                                height="32"
+                                                style="width: 32px; height: 32px; background-color: #2563eb; border-radius: 8px; color: #ffffff; font-size: 16px; font-weight: 700; line-height: 32px;">
+                                                D
+                                            </td>
+                                        </tr>
+
+                                    </table>
+
+                                    <!-- Wordmark -->
+                                    <span style="display: inline-block; vertical-align: middle; margin-left: 8px; font-size: 20px; line-height: 32px; font-weight: 700; color: #0f172a;">
+                                    DocuSphere
+                                </span>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Email card -->
+                <tr>
+                    <td style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px;">
+
+                        <!-- Heading -->
+                        <h1 style="margin: 0 0 16px; font-size: 24px; line-height: 32px; font-weight: 700; color: #0f172a;">
+                            Document submitted for review
+                        </h1>
+
+                        <!-- Greeting -->
+                        <p style="margin: 0 0 16px; font-size: 15px; line-height: 24px; color: #475569;">
+                            Hi
+                            <strong th:text="${firstName}" style="color: #0f172a;">
+                                there
+                            </strong>,
+                        </p>
+
+                        <!-- Introduction -->
+                        <p style="margin: 0 0 24px; font-size: 15px; line-height: 24px; color: #475569;">
+                            <strong th:text="${submitterName}" style="color: #0f172a;">
+                                A user
+                            </strong>
+                            has submitted a document for your review.
+                        </p>
+
+                        <!-- Document details -->
+                        <table role="presentation"
+                               width="100%"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0"
+                               style="margin: 24px 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+
+                            <tr>
+                                <td style="padding: 20px;">
+
+                                    <!-- Document -->
+                                    <p style="margin: 0 0 6px; font-size: 12px; line-height: 18px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
+                                        Document
+                                    </p>
+
+                                    <p th:text="${documentName}"
+                                       style="margin: 0 0 18px; font-size: 16px; line-height: 24px; font-weight: 600; color: #0f172a;">
+                                        Contract.pdf
+                                    </p>
+
+                                    <!-- Submitted by -->
+                                    <p style="margin: 0 0 6px; font-size: 12px; line-height: 18px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
+                                        Submitted by
+                                    </p>
+
+                                    <p th:text="${submitterName}"
+                                       style="margin: 0 0 18px; font-size: 15px; line-height: 22px; color: #0f172a;">
+                                        John Doe
+                                    </p>
+
+                                    <!-- Status -->
+                                    <p style="margin: 0 0 8px; font-size: 12px; line-height: 18px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
+                                        Status
+                                    </p>
+
+                                    <span style="display: inline-block; background-color: #fef3c7; color: #92400e; padding: 5px 10px; border-radius: 6px; font-size: 13px; line-height: 18px; font-weight: 600;">
+                                    Pending Review
+                                </span>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <!-- Action -->
+                        <table role="presentation"
+                               width="100%"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0"
+                               style="margin: 32px 0 0;">
+
+                            <tr>
+                                <td align="center">
+
+                                    <a th:href="${actionUrl}"
+                                       style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; line-height: 20px; font-weight: 600;">
+                                        Review document
+                                    </a>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <!-- Fallback link -->
+                        <p style="margin: 24px 0 0; font-size: 13px; line-height: 20px; color: #64748b;">
+                            If the button doesn't work, copy and paste this link:
+                        </p>
+
+                        <p style="margin: 6px 0 0; font-size: 13px; line-height: 20px;">
+                            <a th:href="${actionUrl}"
+                               th:text="${actionUrl}"
+                               style="color: #2563eb; text-decoration: none; word-break: break-all;">
+                                https://app.docuflow.com/documents/123
+                            </a>
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td align="center" style="padding: 28px 20px 0;">
+
+                        <p style="margin: 0 0 6px; font-size: 13px; line-height: 20px; color: #64748b;">
+                            This email was sent by DocuSphere.
+                        </p>
+
+                        <p style="margin: 0 0 6px; font-size: 12px; line-height: 18px; color: #94a3b8;">
+                            Secure document management, simplified.
+                        </p>
+
+                        <p style="margin: 0; font-size: 12px; line-height: 18px; color: #94a3b8;">
+                            © 2026 DocuSphere. All rights reserved.
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+
+</body>
+</html>

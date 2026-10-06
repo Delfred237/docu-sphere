@@ -5,7 +5,6 @@ import {
   FileText,
   FolderTree,
   Share2,
-  Bell,
   Settings,
   LogOut,
   User,
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/features/auth/stores/authStore";
 import { Logo } from "@/components/shared/Logo";
+import { NotificationsDropdown } from "@/features/notifications/components/NotificationsDropdown";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -109,11 +109,7 @@ export function AppLayout() {
           {/* Right side: notifications + user menu */}
           <div className="flex items-center gap-1 md:gap-2">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5 text-slate-600" />
-              <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <NotificationsDropdown />
 
             {/* User menu */}
             <DropdownMenu>

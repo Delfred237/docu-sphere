@@ -4,14 +4,19 @@ import com.docusphere.auth.domain.User;
 import com.docusphere.auth.repository.UserRepository;
 import com.docusphere.common.exception.ResourceNotFoundException;
 import com.docusphere.notification.domain.Notification;
+import com.docusphere.notification.domain.NotificationType;
 import com.docusphere.notification.dto.NotificationResponse;
 import com.docusphere.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -20,8 +25,8 @@ public class NotificationService {
     private final UserRepository userRepository;
 
     @Transactional
-    public Notification createNotification(Long recipientId, com.docusphere.notification.domain.NotificationType type,
-                                           String title, String message, String actionUrl) {
+    public void createNotification(Long recipientId, NotificationType type,
+                                   String title, String message, String actionUrl) {
         User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", recipientId));
 
@@ -32,15 +37,21 @@ public class NotificationService {
         notification.setActionUrl(actionUrl);
         notification.setRecipient(recipient);
 
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        log.info("✅ Notification saved with id: {}", saved.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getUserNotifications(User user) {
-        return notificationRepository.findByRecipientOrderByCreatedAtDesc(user)
-                .stream()
-                .map(NotificationResponse::fromEntity)
-                .toList();
+    public Page<NotificationResponse> getUserNotifications(User user, boolean unreadOnly, Pageable pageable) {
+        Page<Notification> notifications;
+
+        if (unreadOnly) {
+            notifications = notificationRepository.findByRecipientAndReadFalseOrderByCreatedAtDesc(user, pageable);
+        } else {
+            notifications = notificationRepository.findByRecipientOrderByCreatedAtDesc(user, pageable);
+        }
+
+        return notifications.map(NotificationResponse::fromEntity);
     }
 
     @Transactional(readOnly = true)
@@ -59,5 +70,11 @@ public class NotificationService {
     @Transactional
     public void markAllAsRead(User user) {
         notificationRepository.markAllAsReadByRecipient(user);
+    }
+
+    public void deleteNotification(String publicId, User user) {
+        Notification notification = notificationRepository.findByPublicIdAndRecipient(publicId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", "publicId", publicId));
+        notificationRepository.delete(notification);
     }
 }

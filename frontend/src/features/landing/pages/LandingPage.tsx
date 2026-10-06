@@ -37,7 +37,7 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-slate-50 to-white">
+      <section className="bg-linear-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-6">
