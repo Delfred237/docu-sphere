@@ -5,6 +5,7 @@ import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.ForbiddenException;
 import com.docusphere.common.exception.ResourceNotFoundException;
 import com.docusphere.document.domain.Document;
+import com.docusphere.document.dto.DocumentResponse;
 import com.docusphere.document.repository.DocumentRepository;
 import com.docusphere.sharing.domain.ShareLink;
 import com.docusphere.sharing.dto.ShareLinkResponse;
@@ -82,6 +83,60 @@ public class ShareLinkService {
         }
 
         return shareLink;
+    }
+
+    /**
+     * Prépare le téléchargement d'un document partagé :
+     * - Valide le lien (non expiré, non révoqué)
+     * - Vérifie que le download est autorisé
+     * - Incrémente le compteur de téléchargements
+     * - Retourne le document avec tous ses champs chargés
+     */
+    @Transactional
+    public Document prepareSharedDocumentDownload(String token) {
+        ShareLink shareLink = shareLinkRepository.findByTokenAndDeletedFalse(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Share link not found or invalid."));
+
+        if (shareLink.isExpired()) {
+            throw new BusinessException("This share link has expired.", HttpStatus.GONE, "LINK_EXPIRED");
+        }
+
+        if (!shareLink.isAllowDownload()) {
+            throw new ForbiddenException("Download is not allowed for this share link.");
+        }
+
+        // Incrémenter le compteur dans la même transaction
+        shareLink.incrementDownloadCount();
+        shareLinkRepository.save(shareLink);
+
+        Document document = shareLink.getDocument();
+        if (document == null || document.isDeleted()) {
+            throw new ResourceNotFoundException("The shared document no longer exists.");
+        }
+
+        // Forcer l'initialisation du proxy avant la fin de la transaction
+        document.getStoredFilename();
+        document.getOriginalFilename();
+        document.getMimeType();
+
+        return document;
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentResponse getSharedDocumentResponse(String token) {
+        ShareLink shareLink = shareLinkRepository.findByTokenAndDeletedFalse(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Share link not found or invalid."));
+
+        if (shareLink.isExpired()) {
+            throw new BusinessException("This share link has expired.", HttpStatus.GONE, "LINK_EXPIRED");
+        }
+
+        Document document = shareLink.getDocument();
+        if (document == null || document.isDeleted()) {
+            throw new ResourceNotFoundException("The shared document no longer exists.");
+        }
+
+        return DocumentResponse.fromEntity(document);
     }
 
     @Transactional

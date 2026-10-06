@@ -49,8 +49,12 @@ app:
       - "image/jpg"
       - "image/jpeg"
       - "image/png"
+      - "image/webp"
       - "application/vnd.openxmlformats-officedocument.word"
       - "application/msword"
+      - "application/msexcel"
+      - "application/docx"
+      - "application/xlsx"
     max-file-size: 52428800 #50 MB
 
 # CORS Configuration (externalisée)

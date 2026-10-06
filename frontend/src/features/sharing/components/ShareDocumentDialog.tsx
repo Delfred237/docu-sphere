@@ -250,7 +250,7 @@ export function ShareDocumentDialog({
               <Label>Share link</Label>
               <div className="flex items-center gap-2 w-full">
                 <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-md border border-slate-200 min-w-0 overflow-hidden">
-                  <Link2 className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                  <Link2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <code className="text-xs text-slate-700 break-all font-mono">
                     {shareLinkService.getShareUrl(createdLink.token)}
                   </code>
@@ -259,7 +259,7 @@ export function ShareDocumentDialog({
                   variant="outline"
                   size="icon"
                   onClick={handleCopy}
-                  className="flex-shrink-0 h-10 w-10"
+                  className="shrink-0 h-10 w-10"
                 >
                   {copied ? (
                     <Check className="h-4 w-4 text-green-600" />

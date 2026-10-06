@@ -49,40 +49,40 @@ export function DocumentDetailPage() {
   const renameMutation = useMutation({
     mutationFn: (newName: string) =>
       documentService.renameDocument(publicId!, newName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["document", publicId] });
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["document", publicId] });
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
     onError: () => setError("Failed to rename document"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => documentService.deleteDocument(publicId!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      navigate("/documents");
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      await navigate("/documents");
     },
     onError: () => setError("Failed to delete document"),
   });
 
   const submitMutation = useMutation({
     mutationFn: () => documentService.submitForReview(publicId!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["document", publicId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["document", publicId] });
     },
   });
 
   const approveMutation = useMutation({
     mutationFn: () => documentService.approveDocument(publicId!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["document", publicId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["document", publicId] });
     },
   });
 
   const rejectMutation = useMutation({
     mutationFn: () => documentService.rejectDocument(publicId!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["document", publicId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["document", publicId] });
     },
   });
 

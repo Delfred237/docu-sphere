@@ -11,6 +11,7 @@ import com.docusphere.sharing.service.ShareLinkService;
 import com.docusphere.storage.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.InputStream;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/shared")
 @RequiredArgsConstructor
@@ -55,7 +57,7 @@ public class SharedDocumentController {
         // Pour simplifier, on suppose que l'utilisateur a le droit de voir le QR code
         // Dans une vraie app, on vérifierait les droits
 
-        String baseUrl = "http://localhost:5173/share/api/v1/shared"; // URL du frontend
+        String baseUrl = "http://localhost:5173/api/v1/shared/"; // URL du frontend
         String content = baseUrl + linkPublicId;
 
         try {
@@ -70,28 +72,19 @@ public class SharedDocumentController {
 
     @GetMapping("/{token}/info")
     public ResponseEntity<DocumentResponse> getSharedDocumentInfo(@PathVariable String token) {
-        ShareLink shareLink = shareLinkService.getValidShareLink(token);
-        Document document = shareLink.getDocument();
-        return ResponseEntity.ok(DocumentResponse.fromEntity(document));
+        return ResponseEntity.ok(shareLinkService.getSharedDocumentResponse(token));
     }
 
     @GetMapping("/{token}/download")
     public ResponseEntity<InputStreamResource> downloadSharedDocument(@PathVariable String token) {
-        ShareLink shareLink = shareLinkService.getValidShareLink(token);
+        Document document = shareLinkService.prepareSharedDocumentDownload(token);
 
-        if (!shareLink.isAllowDownload()) {
-            return ResponseEntity.status(403).build();
-        }
-
-        // Incrémenter le compteur de téléchargements
-        shareLinkService.recordDownload(token);
-
-        Document document = shareLink.getDocument();
         InputStream fileStream = storageService.load(document.getStoredFilename());
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(document.getMimeType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFilename() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + document.getOriginalFilename() + "\"")
                 .body(new InputStreamResource(fileStream));
     }
 }

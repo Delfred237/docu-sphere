@@ -43,7 +43,6 @@ export const shareLinkService = {
     return `${baseUrl}/v1/shared/share/${linkPublicId}/qrcode`;
   },
 
-  // Ajoute cette méthode dans shareLinkService :
   async createShareLink(
     documentPublicId: string,
     request: CreateShareLinkRequest,

@@ -14,6 +14,7 @@ import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 import { LandingPage } from "./features/landing/pages/LandingPage";
 import { SharedPage } from "./features/sharing/pages/SharedPage";
 import { DocumentDetailPage } from "./features/documents/pages/DocumentDetailPage";
+import { SharedDocumentPage } from "./features/sharing/public/pages/SharedDocument";
 
 function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -27,7 +28,7 @@ function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -102,6 +103,7 @@ function App() {
             )
           }
         />
+        <Route path="/share/:token" element={<SharedDocumentPage />} />
 
         {/* Protected routes */}
         <Route

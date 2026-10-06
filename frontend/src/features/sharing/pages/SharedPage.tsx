@@ -81,7 +81,7 @@ export function SharedPage() {
           <Alert variant="error" message={error} />
           <button
             onClick={() => setError(null)}
-            className="text-sm text-slate-400 hover:text-slate-600 flex-shrink-0"
+            className="text-sm text-slate-400 hover:text-slate-600 shrink-0"
           >
             ✕
           </button>
