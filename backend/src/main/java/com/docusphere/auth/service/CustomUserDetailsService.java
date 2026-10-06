@@ -3,12 +3,14 @@ package com.docusphere.auth.service;
 import com.docusphere.auth.domain.User;
 import com.docusphere.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,9 +24,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmailIgnoreCaseWithRolesAndPermissions(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
 
-        var authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
-                .collect(Collectors.toList());
+//        var authorities = user.getRoles().stream()
+//                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
+//                .collect(Collectors.toList());
+        Set<GrantedAuthority> authorities = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> new SimpleGrantedAuthority(permission.getName().name()))
+                .collect(Collectors.toSet());
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())

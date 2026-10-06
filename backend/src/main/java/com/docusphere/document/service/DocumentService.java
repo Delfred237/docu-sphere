@@ -1,6 +1,7 @@
 package com.docusphere.document.service;
 
 import com.docusphere.audit.event.AuditEvent;
+import com.docusphere.auth.domain.RoleName;
 import com.docusphere.auth.domain.User;
 import com.docusphere.common.exception.BusinessException;
 import com.docusphere.common.exception.ForbiddenException;
@@ -43,6 +44,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -196,7 +198,7 @@ public class DocumentService {
 
     @Transactional(readOnly = true)
     public Page<DocumentResponse> searchDocuments(
-            User owner,
+            User currentUser,
             String name,
             DocumentStatus status,
             String mimeType,
@@ -206,9 +208,26 @@ public class DocumentService {
 
         // 1. Construction dynamique de la requête
         Specification<Document> spec = Specification.where(
-                DocumentSpecifications.isNotDeleted())
-                .and(DocumentSpecifications.hasOwner(owner));
+                DocumentSpecifications.isNotDeleted());
 
+        // Ne filtrer par owner que si l'utilisateur n'est pas admin/manager/reviewer
+        boolean canViewAllDocuments = currentUser.getRoles().stream()
+                .anyMatch(role ->
+                        role.getName() == RoleName.ADMIN ||
+                                role.getName() == RoleName.MANAGER ||
+                                role.getName() == RoleName.REVIEWER
+                );
+
+        log.info("User {} has roles: {}, canViewAllDocuments: {}",
+                currentUser.getEmail(),
+                currentUser.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toList()),
+                canViewAllDocuments);
+
+        if (!canViewAllDocuments) {
+            // User standard : voit uniquement ses propres documents
+            spec = spec.and(DocumentSpecifications.hasOwner(currentUser));
+        }
+        // Admin/Manager/Reviewer : voient tous les documents
         if (name != null && !name.isBlank()) {
             spec = spec.and(DocumentSpecifications.nameContains(name));
         }
