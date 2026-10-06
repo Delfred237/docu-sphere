@@ -18,4 +18,6 @@ public interface ShareLinkRepository extends JpaRepository<ShareLink, Long> {
     List<ShareLink> findAllByCreatedByUserIdAndDeletedFalseOrderByCreatedAtDesc(Long userId);
 
     boolean existsByDocumentIdAndDeletedFalse(Long documentId);
+
+    long countByDeletedFalse();
 }

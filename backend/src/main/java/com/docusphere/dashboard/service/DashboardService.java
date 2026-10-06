@@ -1,5 +1,6 @@
 package com.docusphere.dashboard.service;
 
+import com.docusphere.auth.domain.RoleName;
 import com.docusphere.auth.domain.User;
 import com.docusphere.dashboard.dto.DashboardResponse;
 import com.docusphere.document.domain.Document;
@@ -31,16 +32,38 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public DashboardResponse getDashboardData(User user) {
-        List<Document> userDocuments = documentRepository.findAllByOwnerIdAndDeletedFalse(user.getId());
+        boolean canViewAll = canViewAllData(user);
+
+        // Récupérer les documents selon les permissions
+        List<Document> documents;
+        if (canViewAll) {
+            documents = documentRepository.findAllByDeletedFalse();
+        } else {
+            documents = documentRepository.findAllByOwnerIdAndDeletedFalse(user.getId());
+        }
+
+        // Récupérer les folders selon les permissions
+        long totalFolders;
+        if (canViewAll) {
+            totalFolders = folderRepository.countByDeletedFalse();
+        } else {
+            totalFolders = folderRepository.countByOwnerIdAndDeletedFalse(user.getId());
+        }
+
+        // Récupérer les share links selon les permissions
+        long sharedLinks;
+        if (canViewAll) {
+            sharedLinks = shareLinkRepository.countByDeletedFalse();
+        } else {
+            sharedLinks = shareLinkRepository.countByCreatedByUserIdAndDeletedFalse(user.getId());
+        }
 
         // Overview
-        long totalDocuments = userDocuments.size();
-        long totalFolders = folderRepository.countByOwnerIdAndDeletedFalse(user.getId());
-        long pendingReviews = userDocuments.stream()
+        long totalDocuments = documents.size();
+        long pendingReviews = documents.stream()
                 .filter(d -> d.getStatus() == DocumentStatus.PENDING_REVIEW)
                 .count();
-        long sharedLinks = shareLinkRepository.countByCreatedByUserIdAndDeletedFalse(user.getId());
-        long storageUsed = userDocuments.stream()
+        long storageUsed = documents.stream()
                 .mapToLong(Document::getSize)
                 .sum();
 
@@ -49,24 +72,24 @@ public class DashboardService {
         );
 
         // Activity sur les 14 derniers jours
-        List<DashboardResponse.DailyActivity> activity = buildDailyActivity(userDocuments);
+        List<DashboardResponse.DailyActivity> activity = buildDailyActivity(documents);
 
         // Répartition par statut
-        Map<String, Long> byStatus = userDocuments.stream()
+        Map<String, Long> byStatus = documents.stream()
                 .collect(Collectors.groupingBy(
                         d -> d.getStatus().name(),
                         Collectors.counting()
                 ));
 
         // Répartition par type MIME
-        Map<String, Long> byType = userDocuments.stream()
+        Map<String, Long> byType = documents.stream()
                 .collect(Collectors.groupingBy(
                         d -> extractFileType(d.getMimeType()),
                         Collectors.counting()
                 ));
 
         // Documents récents (5 derniers)
-        List<DashboardResponse.RecentDocument> recentDocuments = userDocuments.stream()
+        List<DashboardResponse.RecentDocument> recentDocuments = documents.stream()
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .limit(5)
                 .map(d -> new DashboardResponse.RecentDocument(
@@ -112,5 +135,14 @@ public class DashboardService {
         if (mimeType.contains("excel") || mimeType.contains("sheet")) return "Excel";
         if (mimeType.contains("text")) return "Text";
         return "Other";
+    }
+
+    private boolean canViewAllData(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role ->
+                        role.getName() == RoleName.ADMIN ||
+                                role.getName() == RoleName.MANAGER ||
+                                role.getName() == RoleName.REVIEWER
+                );
     }
 }

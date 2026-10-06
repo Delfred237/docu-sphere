@@ -32,4 +32,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     long countByOwnerIdAndDeletedFalse(Long id);
 
     boolean existsByParentIdAndDeletedFalse(Long id);
+
+    long countByDeletedFalse();
 }

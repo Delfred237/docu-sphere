@@ -15,4 +15,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long>, JpaSp
     List<Document> findAllByOwnerIdAndDeletedFalse(Long id);
 
     boolean existsByFolderIdAndDeletedFalse(Long id);
+
+    List<Document> findAllByDeletedFalse();
 }
